@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,16 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Vendor IQ Boost theme colors
+				'vibrant-blue': '#3B82F6',
+				'vibrant-purple': '#8B5CF6',
+				'vibrant-pink': '#EC4899',
+				'vibrant-green': '#10B981',
+				'vibrant-orange': '#F59E0B',
+				'vibrant-red': '#EF4444',
+				'fun-yellow': '#FDE047',
+				'fun-cyan': '#06B6D4',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +94,58 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'bounce-in': {
+					'0%': {
+						transform: 'scale(0.3)',
+						opacity: '0'
+					},
+					'50%': {
+						transform: 'scale(1.05)'
+					},
+					'70%': {
+						transform: 'scale(0.9)'
+					},
+					'100%': {
+						transform: 'scale(1)',
+						opacity: '1'
+					}
+				},
+				'slide-up': {
+					'0%': {
+						transform: 'translateY(100%)',
+						opacity: '0'
+					},
+					'100%': {
+						transform: 'translateY(0)',
+						opacity: '1'
+					}
+				},
+				'pulse-glow': {
+					'0%, 100%': {
+						boxShadow: '0 0 5px currentColor'
+					},
+					'50%': {
+						boxShadow: '0 0 20px currentColor, 0 0 30px currentColor'
+					}
+				},
+				'wiggle': {
+					'0%, 100%': { transform: 'rotate(-3deg)' },
+					'50%': { transform: 'rotate(3deg)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'bounce-in': 'bounce-in 0.6s ease-out',
+				'slide-up': 'slide-up 0.4s ease-out',
+				'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+				'wiggle': 'wiggle 1s ease-in-out infinite'
+			},
+			backgroundImage: {
+				'gradient-rainbow': 'linear-gradient(45deg, #3B82F6, #8B5CF6, #EC4899, #10B981)',
+				'gradient-sunset': 'linear-gradient(45deg, #F59E0B, #EC4899, #8B5CF6)',
+				'gradient-ocean': 'linear-gradient(45deg, #06B6D4, #3B82F6, #8B5CF6)',
 			}
 		}
 	},
