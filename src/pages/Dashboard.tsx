@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -19,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import ProgressBar from '@/components/ProgressBar';
 import BadgeDisplay from '@/components/BadgeDisplay';
 import LevelProgress from '@/components/LevelProgress';
-import { currentUser, learningModules, liveSessions } from '@/data/mockData';
+import { currentUser, learningModules, liveSessionsData } from '@/data/mockData';
 
 const Dashboard = () => {
   const recentModules = learningModules.slice(0, 3);
@@ -207,21 +206,21 @@ const Dashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {liveSessions.length > 0 && (
+              {liveSessionsData.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="font-semibold">{liveSessions[0].title}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{liveSessions[0].description}</p>
+                  <h3 className="font-semibold">{liveSessionsData[0].title}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{liveSessionsData[0].description}</p>
                   <div className="flex items-center space-x-2 text-sm">
                     <Calendar className="h-4 w-4" />
-                    <span>{liveSessions[0].date} à {liveSessions[0].time}</span>
+                    <span>{liveSessionsData[0].date} à {liveSessionsData[0].time}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm">
                     <Users className="h-4 w-4" />
-                    <span>{liveSessions[0].registeredCount}/{liveSessions[0].maxParticipants} inscrits</span>
+                    <span>{liveSessionsData[0].registeredCount}/{liveSessionsData[0].maxParticipants} inscrits</span>
                   </div>
                   <Link to="/live-sessions">
                     <Button className="w-full bg-gradient-rainbow hover:opacity-90">
-                      {liveSessions[0].isRegistered ? 'Rejoindre' : 'S\'inscrire'}
+                      {liveSessionsData[0].isRegistered ? 'Rejoindre' : 'S\'inscrire'}
                     </Button>
                   </Link>
                 </div>

@@ -4,13 +4,13 @@ import { Calendar, Clock, Users, Video, UserCheck, ExternalLink, Filter } from '
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { liveSessions } from '@/data/mockData';
+import { liveSessionsData } from '@/data/mockData';
 import { toast } from '@/hooks/use-toast';
 
 const LiveSessions = () => {
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'registered'>('all');
 
-  const filteredSessions = liveSessions.filter(session => {
+  const filteredSessions = liveSessionsData.filter(session => {
     if (filter === 'upcoming') {
       return new Date(session.date) >= new Date();
     }
@@ -21,7 +21,7 @@ const LiveSessions = () => {
   });
 
   const handleRegister = (sessionId: string) => {
-    const session = liveSessions.find(s => s.id === sessionId);
+    const session = liveSessionsData.find(s => s.id === sessionId);
     if (session) {
       toast({
         title: session.isRegistered ? "Désinscription confirmée" : "Inscription confirmée !",
@@ -33,7 +33,7 @@ const LiveSessions = () => {
   };
 
   const handleJoinSession = (sessionId: string) => {
-    const session = liveSessions.find(s => s.id === sessionId);
+    const session = liveSessionsData.find(s => s.id === sessionId);
     if (session?.meetingLink) {
       window.open(session.meetingLink, '_blank');
       toast({

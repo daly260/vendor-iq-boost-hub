@@ -259,6 +259,9 @@ export const leaderboard: Leaderboard[] = [
   }
 ];
 
+// Export users array for admin panel
+export const users: User[] = leaderboard.map(entry => entry.user);
+
 export const badges: Badge[] = [
   {
     id: '1',
