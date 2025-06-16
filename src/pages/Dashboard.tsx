@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -48,7 +49,7 @@ const Dashboard = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Welcome Section */}
-      <div className="bg-gradient-rainbow rounded-2xl p-6 text-white">
+      <div className="bg-wamia-orange rounded-2xl p-6 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <img 
@@ -57,14 +58,14 @@ const Dashboard = () => {
               className="w-16 h-16 rounded-full border-4 border-white shadow-lg"
             />
             <div>
-              <h1 className="text-2xl font-bold animate-bounce-in">
+              <h1 className="text-2xl font-bold">
                 Salut {currentUser.name.split(' ')[0]} ! 👋
               </h1>
               <p className="opacity-90">Prêt à booster tes ventes aujourd'hui ?</p>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-3xl font-bold animate-pulse-glow">{currentUser.points.toLocaleString()}</div>
+            <div className="text-3xl font-bold">{currentUser.points.toLocaleString()}</div>
             <div className="text-sm opacity-90">points totaux</div>
           </div>
         </div>
@@ -72,7 +73,7 @@ const Dashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-vibrant-blue to-vibrant-purple text-white border-0 hover:scale-105 transition-transform duration-200">
+        <Card className="bg-vibrant-blue text-white border-0 hover:scale-105 transition-transform duration-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -84,7 +85,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-vibrant-green to-fun-cyan text-white border-0 hover:scale-105 transition-transform duration-200">
+        <Card className="bg-vibrant-green text-white border-0 hover:scale-105 transition-transform duration-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -96,7 +97,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-vibrant-orange to-vibrant-red text-white border-0 hover:scale-105 transition-transform duration-200">
+        <Card className="bg-vibrant-orange text-white border-0 hover:scale-105 transition-transform duration-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -108,7 +109,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-vibrant-pink to-vibrant-purple text-white border-0 hover:scale-105 transition-transform duration-200">
+        <Card className="bg-vibrant-pink text-white border-0 hover:scale-105 transition-transform duration-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -219,7 +220,7 @@ const Dashboard = () => {
                     <span>{liveSessionsData[0].registeredCount}/{liveSessionsData[0].maxParticipants} inscrits</span>
                   </div>
                   <Link to="/live-sessions">
-                    <Button className="w-full bg-gradient-rainbow hover:opacity-90">
+                    <Button className="w-full bg-wamia-orange hover:opacity-90">
                       {liveSessionsData[0].isRegistered ? 'Rejoindre' : 'S\'inscrire'}
                     </Button>
                   </Link>

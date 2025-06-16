@@ -23,11 +23,11 @@ const BadgeDisplay: React.FC<BadgeDisplayProps> = ({
 
   return (
     <div 
-      className={`relative group ${unlocked ? 'animate-bounce-in' : 'opacity-50 grayscale'}`}
+      className={`relative group ${unlocked ? '' : 'opacity-50 grayscale'}`}
       title={showTooltip ? badge.description : undefined}
     >
-      <div className={`${sizeClasses[size]} rounded-full ${badge.color} bg-white dark:bg-gray-800 border-2 border-current flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-200 ${unlocked ? 'animate-pulse-glow' : ''}`}>
-        <span className={unlocked ? 'animate-wiggle' : ''}>{badge.icon}</span>
+      <div className={`${sizeClasses[size]} rounded-full ${badge.color} bg-white dark:bg-gray-800 border-2 border-current flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-200`}>
+        <span>{badge.icon}</span>
       </div>
       
       {showTooltip && (
