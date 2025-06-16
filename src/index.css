@@ -1,9 +1,10 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+/* Définition du système de design. Toutes les couleurs, dégradés, polices, etc. doivent être définis ici. */
 
 @layer base {
   :root {
@@ -92,8 +93,8 @@
   }
 
   body {
-    @apply bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900 text-foreground;
-    font-family: 'Inter', system-ui, sans-serif;
+    @apply bg-gradient-to-br from-orange-50 via-red-50 to-teal-50 dark:from-gray-900 dark:via-red-900 dark:to-teal-900 text-foreground;
+    font-family: 'Montserrat', 'Inter', system-ui, sans-serif;
   }
 }
 
@@ -105,5 +106,14 @@
   @keyframes float {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-10px); }
+  }
+
+  .font-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+  }
+
+  .font-body {
+    font-family: 'Inter', sans-serif;
   }
 }

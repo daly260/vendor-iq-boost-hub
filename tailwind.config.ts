@@ -63,20 +63,31 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Vendor IQ Boost theme colors
-				'vibrant-blue': '#3B82F6',
+				// Couleurs Wamia - inspirées de la charte graphique
+				'wamia-orange': '#FF4500',
+				'wamia-red': '#E73C3E',
+				'wamia-dark': '#1A1A1A',
+				'wamia-light': '#F8F8F8',
+				'wamia-teal': '#2D8B8B',
+				'wamia-blue': '#4A90B8',
+				'wamia-lightblue': '#87CEEB',
+				'vibrant-blue': '#4A90B8',
 				'vibrant-purple': '#8B5CF6',
 				'vibrant-pink': '#EC4899',
-				'vibrant-green': '#10B981',
-				'vibrant-orange': '#F59E0B',
-				'vibrant-red': '#EF4444',
+				'vibrant-green': '#2D8B8B',
+				'vibrant-orange': '#FF4500',
+				'vibrant-red': '#E73C3E',
 				'fun-yellow': '#FDE047',
-				'fun-cyan': '#06B6D4',
+				'fun-cyan': '#87CEEB',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
+			},
+			fontFamily: {
+				'montserrat': ['Montserrat', 'sans-serif'],
+				'inter': ['Inter', 'sans-serif'],
 			},
 			keyframes: {
 				'accordion-down': {
@@ -143,9 +154,10 @@ export default {
 				'wiggle': 'wiggle 1s ease-in-out infinite'
 			},
 			backgroundImage: {
-				'gradient-rainbow': 'linear-gradient(45deg, #3B82F6, #8B5CF6, #EC4899, #10B981)',
-				'gradient-sunset': 'linear-gradient(45deg, #F59E0B, #EC4899, #8B5CF6)',
-				'gradient-ocean': 'linear-gradient(45deg, #06B6D4, #3B82F6, #8B5CF6)',
+				'gradient-wamia': 'linear-gradient(45deg, #FF4500, #E73C3E, #2D8B8B)',
+				'gradient-rainbow': 'linear-gradient(45deg, #FF4500, #E73C3E, #EC4899, #2D8B8B)',
+				'gradient-sunset': 'linear-gradient(45deg, #FF4500, #EC4899, #8B5CF6)',
+				'gradient-ocean': 'linear-gradient(45deg, #87CEEB, #4A90B8, #2D8B8B)',
 			}
 		}
 	},

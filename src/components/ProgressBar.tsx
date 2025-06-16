@@ -6,7 +6,7 @@ interface ProgressBarProps {
   className?: string;
   showPercentage?: boolean;
   animated?: boolean;
-  color?: 'blue' | 'green' | 'purple' | 'orange' | 'pink';
+  color?: 'wamia' | 'orange' | 'green' | 'blue' | 'teal';
 }
 
 const ProgressBar: React.FC<ProgressBarProps> = ({ 
@@ -14,21 +14,21 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
   className = '', 
   showPercentage = true, 
   animated = true,
-  color = 'blue'
+  color = 'wamia'
 }) => {
   const colorClasses = {
-    blue: 'bg-vibrant-blue',
-    green: 'bg-vibrant-green',
-    purple: 'bg-vibrant-purple',
-    orange: 'bg-vibrant-orange',
-    pink: 'bg-vibrant-pink'
+    wamia: 'bg-wamia-orange',
+    orange: 'bg-wamia-orange',
+    green: 'bg-wamia-teal',
+    blue: 'bg-wamia-blue',
+    teal: 'bg-wamia-teal'
   };
 
   return (
     <div className={`w-full ${className}`}>
       <div className="flex justify-between items-center mb-1">
         {showPercentage && (
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <span className="text-sm font-medium font-body text-gray-700 dark:text-gray-300">
             {Math.round(progress)}%
           </span>
         )}

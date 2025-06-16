@@ -20,15 +20,15 @@ const LevelProgress: React.FC<LevelProgressProps> = ({
   const progressPercentage = (currentPoints / nextLevelPoints) * 100;
 
   return (
-    <div className={`bg-gradient-rainbow p-4 rounded-xl text-white ${className}`}>
+    <div className={`bg-gradient-wamia p-4 rounded-xl text-white ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <Trophy className="h-6 w-6" />
-          <span className="font-bold text-lg">Niveau {currentLevel}</span>
+          <span className="font-bold text-lg font-title">Niveau {currentLevel}</span>
         </div>
         <div className="flex items-center space-x-1">
           <Star className="h-4 w-4" />
-          <span className="text-sm">{currentPoints.toLocaleString()} pts</span>
+          <span className="text-sm font-body">{currentPoints.toLocaleString()} pts</span>
         </div>
       </div>
       
@@ -39,7 +39,7 @@ const LevelProgress: React.FC<LevelProgressProps> = ({
         className="mb-2"
       />
       
-      <div className="flex justify-between items-center text-sm">
+      <div className="flex justify-between items-center text-sm font-body">
         <span>{pointsToNextLevel.toLocaleString()} pts jusqu'au niveau {currentLevel + 1}</span>
         <span className="opacity-90">{Math.round(progressPercentage)}%</span>
       </div>
