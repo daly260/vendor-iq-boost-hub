@@ -20,7 +20,7 @@ const LevelProgress: React.FC<LevelProgressProps> = ({
   const progressPercentage = (currentPoints / nextLevelPoints) * 100;
 
   return (
-    <div className={`bg-gradient-wamia p-4 rounded-xl text-white ${className}`}>
+    <div className={`bg-wamia-orange p-4 rounded-xl text-white ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <Trophy className="h-6 w-6" />

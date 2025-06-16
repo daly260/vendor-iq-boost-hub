@@ -1,4 +1,3 @@
-
 import { User, Badge, LearningModule, Ticket, LiveSession, Leaderboard } from '../types';
 
 export const currentUser: User = {
@@ -144,43 +143,58 @@ export const tickets: Ticket[] = [
   }
 ];
 
-export const liveSessions: LiveSession[] = [
+export const liveSessionsData: LiveSession[] = [
   {
     id: '1',
-    title: 'Masterclass: Stratégies de Black Friday',
-    description: 'Prépare-toi pour la saison haute avec nos experts',
+    title: 'Optimisation des annonces produits',
+    description: 'Apprenez à créer des annonces qui convertissent et génèrent plus de ventes.',
     date: '2024-06-20',
     time: '14:00',
-    duration: 90,
-    instructor: 'Marie Dubois',
-    maxParticipants: 100,
-    registeredCount: 67,
+    duration: 60,
+    instructor: 'Sarah Laurent',
+    maxParticipants: 50,
+    registeredCount: 32,
     isRegistered: true,
-    meetingLink: 'https://meet.example.com/blackfriday'
+    meetingLink: 'https://meet.wamia.com/room/opt-annonces'
   },
   {
-    id: '2',
-    title: 'Q&A: Nouveautés Plateforme',
-    description: 'Questions/réponses sur les dernières fonctionnalités',
+    id: '2', 
+    title: 'Stratégies de prix dynamiques',
+    description: 'Maîtrisez les techniques de pricing pour maximiser vos profits.',
     date: '2024-06-22',
-    time: '16:30',
-    duration: 60,
-    instructor: 'Thomas Bernard',
-    maxParticipants: 50,
-    registeredCount: 23,
-    isRegistered: false
+    time: '10:30',
+    duration: 90,
+    instructor: 'Marc Dubois',
+    maxParticipants: 30,
+    registeredCount: 18,
+    isRegistered: false,
+    meetingLink: 'https://meet.wamia.com/room/pricing-strategies'
   },
   {
     id: '3',
-    title: 'Atelier: Optimisation SEO',
-    description: 'Améliore le référencement de tes produits',
+    title: 'Gestion avancée des stocks',
+    description: 'Optimisez votre gestion de stock pour éviter les ruptures.',
     date: '2024-06-25',
-    time: '10:00',
-    duration: 120,
-    instructor: 'Lucie Chen',
-    maxParticipants: 30,
+    time: '16:00', 
+    duration: 45,
+    instructor: 'Julie Martin',
+    maxParticipants: 40,
+    registeredCount: 25,
+    isRegistered: true,
+    meetingLink: 'https://meet.wamia.com/room/stock-management'
+  },
+  {
+    id: '4',
+    title: 'Analytics et KPIs vendeurs',
+    description: 'Comprendre et analyser vos performances de vente.',
+    date: '2024-06-27',
+    time: '11:00',
+    duration: 75,
+    instructor: 'Thomas Bernard',
+    maxParticipants: 35,
     registeredCount: 28,
-    isRegistered: false
+    isRegistered: false,
+    meetingLink: 'https://meet.wamia.com/room/analytics-kpis'
   }
 ];
 

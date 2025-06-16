@@ -38,9 +38,6 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
           className={`h-2.5 rounded-full ${colorClasses[color]} ${animated ? 'transition-all duration-500 ease-out' : ''}`}
           style={{ width: `${Math.min(progress, 100)}%` }}
         >
-          {animated && (
-            <div className="h-full w-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
-          )}
         </div>
       </div>
     </div>
