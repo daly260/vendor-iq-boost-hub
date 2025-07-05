@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
 import { useAuth } from "@/pages/AuthContext";
 
 export default function LoginPage() {
@@ -32,7 +31,7 @@ export default function LoginPage() {
       if (data.role === "admin") {
         navigate("/admin-dashboard");
       } else {
-        navigate("/");
+        navigate("/user-dashboard");
       }
 
     } catch (err: any) {
@@ -44,27 +43,32 @@ export default function LoginPage() {
     <div style={{ maxWidth: 400, margin: "auto", padding: 20 }}>
       <h2>Login</h2>
       <form onSubmit={handleSubmit}>
+        <label htmlFor="email" style={{ display: 'block', fontWeight: 'bold', marginBottom: 4 }}>Email</label>
         <input
+          id="email"
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          style={{ width: "100%", marginBottom: 10 }}
+          style={{ width: '100%', marginBottom: 10, border: '2px solid #0070f3', padding: 8, borderRadius: 4 }}
         />
+        <label htmlFor="password" style={{ display: 'block', fontWeight: 'bold', marginBottom: 4 }}>Password</label>
         <input
+          id="password"
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          style={{ width: "100%", marginBottom: 10 }}
+          style={{ width: '100%', marginBottom: 10, border: '2px solid #0070f3', padding: 8, borderRadius: 4 }}
         />
-        <button type="submit" style={{ width: "100%" }}>
-          Login
-        </button>
+        <button type="submit" style={{ width: '100%' }}>Login</button>
       </form>
-      {error && <div style={{ color: "red", marginTop: 10 }}>{error}</div>}
+      {error && <div style={{ color: 'red', marginTop: 10 }}>{error}</div>}
+      <div style={{ marginTop: 10 }}>
+        Pas encore de compte ? <a href="/register">Créer un compte</a>
+      </div>
     </div>
   );
 }

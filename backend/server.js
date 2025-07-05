@@ -22,10 +22,10 @@ mongoose.connect('mongodb+srv://daliklochar:admin123@cluster1.xz2btvr.mongodb.ne
 
 // Update User schema to include name and avatar
 const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ['admin', 'user'], default: 'user' },
-  name: { type: String },
   avatar: { type: String },
   level: { type: Number, default: 1 },
   points: { type: Number, default: 0 },
@@ -378,17 +378,32 @@ app.delete('/users/:id', async (req, res) => {
 app.post('/register', async (req, res) => {
   try {
     const { email, password, role, name } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+    if (!email || !password || !name) {
+      return res.status(400).json({ error: 'Name, email and password are required' });
     }
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ error: 'User already exists' });
-    const userName = name || email.split('@')[0];
-    const user = new User({ email, password, role: role || 'user', name: userName });
+    const user = new User({ email, password, role: role || 'user', name });
     await user.save();
-    res.status(201).json({ message: 'User created', user: { _id: user._id, email, role: user.role, name: userName } });
+    res.status(201).json({ message: 'User created', user: { _id: user._id, email, role: user.role, name } });
   } catch (err) {
     res.status(500).json({ error: 'Failed to register user' });
+  }
+});
+
+// Update user (admin panel)
+app.put('/backend/users/:id', async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+    const update = { name, email, role };
+    if (password) {
+      update.password = await bcrypt.hash(password, 10);
+    }
+    const user = await User.findByIdAndUpdate(req.params.id, update, { new: true });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ message: 'User updated', user });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update user' });
   }
 });
 

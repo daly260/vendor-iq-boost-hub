@@ -19,6 +19,8 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
       },
     },
+    // Enable SPA fallback for client-side routing
+    historyApiFallback: true,
   },
   plugins: [
     react(),

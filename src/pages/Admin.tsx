@@ -1148,7 +1148,17 @@ const Admin: React.FC = () => {
             </div>
             <div className="flex justify-end gap-2 mt-4">
               <Button
-                onClick={() => handleEditVendor(editVendor._id, editVendor)}
+                onClick={async () => {
+                  await fetch(`/backend/users/${editVendor._id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: editVendor.name, email: editVendor.email, role: editVendor.role }),
+                  });
+                  setEditVendor(null);
+                  // Refetch users after update
+                  const res = await fetch('/backend/users');
+                  setUsers(await res.json());
+                }}
                 className="bg-gradient-rainbow hover:opacity-90 text-white"
               >
                 Enregistrer
