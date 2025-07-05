@@ -1,39 +1,53 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/pages/AuthContext';
 import { Calendar, Clock, Users, Video, UserCheck, ExternalLink, Filter } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { liveSessionsData } from '@/data/mockData';
 import { toast } from '@/hooks/use-toast';
 
+// Add User type with _id property
+type User = {
+  _id: string;
+  [key: string]: any;
+};
+
 const LiveSessions = () => {
+  const { user: currentUser } = useAuth();
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'registered'>('all');
+  const [forceUpdate, setForceUpdate] = useState(0);
 
-  const filteredSessions = liveSessionsData.filter(session => {
-    if (filter === 'upcoming') {
-      return new Date(session.date) >= new Date();
-    }
-    if (filter === 'registered') {
-      return session.isRegistered;
-    }
-    return true;
-  });
+  useEffect(() => {
+    fetch('/backend/live-sessions')
+      .then(res => res.json())
+      .then(data => { setSessions(data); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
 
-  const handleRegister = (sessionId: string) => {
-    const session = liveSessionsData.find(s => s.id === sessionId);
-    if (session) {
-      toast({
-        title: session.isRegistered ? "Désinscription confirmée" : "Inscription confirmée !",
-        description: session.isRegistered 
-          ? "Vous avez été désinscrit de cette session" 
-          : `Vous êtes maintenant inscrit à "${session.title}". Vous recevrez un email de confirmation.`,
-      });
+  const handleRegister = async (sessionId, isRegistered) => {
+    if (!currentUser?._id) {
+      toast({ title: 'Erreur', description: 'Vous devez être connecté pour vous inscrire.', variant: 'destructive' });
+      return;
     }
+    const url = isRegistered
+      ? `/backend/live-sessions/${sessionId}/unregister`
+      : `/backend/live-sessions/${sessionId}/register`;
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: currentUser._id }),
+    });
+    // Refetch sessions to update UI
+    const res = await fetch('/backend/live-sessions');
+    const data = await res.json();
+    setSessions(data);
+    setForceUpdate(f => f + 1);
   };
 
   const handleJoinSession = (sessionId: string) => {
-    const session = liveSessionsData.find(s => s.id === sessionId);
+    const session = sessions.find(s => s.id === sessionId);
     if (session?.meetingLink) {
       window.open(session.meetingLink, '_blank');
       toast({
@@ -55,6 +69,15 @@ const LiveSessions = () => {
     const today = new Date();
     return sessionDate.toDateString() === today.toDateString();
   };
+
+  // Helper to calculate duration in minutes
+  const getDuration = (start, end) => {
+    if (!start || !end) return '';
+    const diff = (new Date(end).getTime() - new Date(start).getTime()) / 60000;
+    return `${diff} minutes`;
+  };
+
+  if (loading) return <div>Chargement...</div>;
 
   return (
     <div className="p-6 space-y-6">
@@ -101,145 +124,163 @@ const LiveSessions = () => {
 
       {/* Sessions Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredSessions.map((session) => {
-          const isLive = isSessionLive(session.date, session.time);
-          const isToday = isSessionToday(session.date);
-          const isFull = session.registeredCount >= session.maxParticipants;
-          
-          return (
-            <Card 
-              key={session.id} 
-              className={`group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${
-                isLive ? 'ring-2 ring-vibrant-red animate-pulse-glow' : ''
-              } ${isToday ? 'border-vibrant-blue border-2' : ''}`}
-            >
-              <CardHeader className="relative">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      {isLive && (
-                        <Badge className="bg-vibrant-red text-white animate-pulse">
-                          <div className="flex items-center space-x-1">
-                            <div className="w-2 h-2 bg-white rounded-full"></div>
-                            <span>EN DIRECT</span>
-                          </div>
-                        </Badge>
-                      )}
-                      {isToday && !isLive && (
-                        <Badge className="bg-vibrant-blue text-white">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          Aujourd'hui
-                        </Badge>
-                      )}
-                      {session.isRegistered && (
-                        <Badge className="bg-vibrant-green text-white">
-                          <UserCheck className="h-3 w-3 mr-1" />
-                          Inscrit
-                        </Badge>
-                      )}
-                    </div>
-                    <CardTitle className="text-lg group-hover:text-vibrant-blue transition-colors">
-                      {session.title}
-                    </CardTitle>
-                  </div>
-                  <Video className="h-6 w-6 text-vibrant-purple" />
-                </div>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                <p className="text-gray-600 dark:text-gray-400">{session.description}</p>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-sm">
-                    <Calendar className="h-4 w-4 text-vibrant-blue" />
-                    <span>{new Date(session.date).toLocaleDateString('fr-FR', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 text-sm">
-                    <Clock className="h-4 w-4 text-vibrant-green" />
-                    <span>{session.time} • {session.duration} minutes</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 text-sm">
-                    <Users className="h-4 w-4 text-vibrant-orange" />
-                    <span>{session.registeredCount}/{session.maxParticipants} participants</span>
-                  </div>
-                  
-                  <div className="text-sm">
-                    <span className="font-medium">Animateur:</span> {session.instructor}
-                  </div>
-                </div>
-
-                {/* Progress bar for registration */}
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div 
-                    className="bg-gradient-rainbow h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${(session.registeredCount / session.maxParticipants) * 100}%` }}
-                  />
-                </div>
-
-                <div className="flex space-x-2">
-                  {isLive && session.isRegistered ? (
-                    <Button 
-                      onClick={() => handleJoinSession(session.id)}
-                      className="flex-1 bg-vibrant-red hover:bg-red-600 text-white animate-pulse"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Rejoindre maintenant
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => handleRegister(session.id)}
-                      disabled={isFull && !session.isRegistered}
-                      className={`flex-1 ${
-                        session.isRegistered 
-                          ? 'bg-gray-500 hover:bg-gray-600' 
-                          : 'bg-gradient-rainbow hover:opacity-90'
-                      } ${isFull && !session.isRegistered ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      {session.isRegistered ? (
-                        <>
-                          <UserCheck className="h-4 w-4 mr-2" />
-                          Se désinscrire
-                        </>
-                      ) : isFull ? (
-                        'Complet'
-                      ) : (
-                        <>
-                          <UserCheck className="h-4 w-4 mr-2" />
-                          S'inscrire
-                        </>
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {filteredSessions.length === 0 && (
-        <div className="text-center py-12">
-          <Video className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
-            Aucune session trouvée
-          </h3>
-          <p className="text-gray-500">
-            {filter === 'upcoming' 
-              ? "Aucune session programmée pour le moment. Revenez bientôt !"
-              : filter === 'registered'
-              ? "Vous n'êtes inscrit à aucune session pour le moment."
-              : "Aucune session disponible actuellement."
+        {sessions
+          .filter(session => {
+            if (filter === 'upcoming') {
+              return new Date(session.startDateTime) >= new Date();
             }
-          </p>
-        </div>
-      )}
+            if (filter === 'registered') {
+              return currentUser && session.registeredUsers && session.registeredUsers.some(id => String(id) === String(currentUser._id));
+            }
+            return true;
+          })
+          .map((session) => {
+            const start = session.startDateTime ? new Date(session.startDateTime) : null;
+            const end = session.endDateTime ? new Date(session.endDateTime) : null;
+            const dateStr = start ? `${start.getDate()}/${start.getMonth() + 1}/${start.getFullYear()}` : '';
+            const timeStr = start && end ? `${start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : '';
+            const isLive = isSessionLive(session.date, session.time);
+            const isToday = isSessionToday(session.date);
+            const isFull = session.registeredCount >= session.maxParticipants;
+            const isRegistered = currentUser && session.registeredUsers && session.registeredUsers.some(id => String(id) === String(currentUser._id));
+            
+            return (
+              <Card 
+                key={session._id || session.id} 
+                className={`group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${
+                  isLive ? 'ring-2 ring-vibrant-red animate-pulse-glow' : ''
+                } ${isToday ? 'border-vibrant-blue border-2' : ''}`}
+              >
+                <CardHeader className="relative">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        {isLive && (
+                          <Badge className="bg-vibrant-red text-white animate-pulse">
+                            <div className="flex items-center space-x-1">
+                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                              <span>EN DIRECT</span>
+                            </div>
+                          </Badge>
+                        )}
+                        {isToday && !isLive && (
+                          <Badge className="bg-vibrant-blue text-white">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            Aujourd'hui
+                          </Badge>
+                        )}
+                        {session.isRegistered && (
+                          <Badge className="bg-vibrant-green text-white">
+                            <UserCheck className="h-3 w-3 mr-1" />
+                            Inscrit
+                          </Badge>
+                        )}
+                      </div>
+                      <CardTitle className="text-lg group-hover:text-vibrant-blue transition-colors">
+                        {session.title}
+                      </CardTitle>
+                    </div>
+                    <Video className="h-6 w-6 text-vibrant-purple" />
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="space-y-4">
+                  <p className="text-gray-600 dark:text-gray-400">{session.description}</p>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 text-sm">
+                      <Calendar className="h-4 w-4 text-vibrant-blue" />
+                      <span>{dateStr}</span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2 text-sm">
+                      <Clock className="h-4 w-4 text-vibrant-green" />
+                      <span>{timeStr || 'Heure non définie'}</span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2 text-sm">
+                      <Users className="h-4 w-4 text-vibrant-orange" />
+                      <span>{session.registeredCount || 0}/{session.maxParticipants} participants</span>
+                    </div>
+                    
+                    <div className="text-sm">
+                      <span className="font-medium">Animateur:</span> {session.instructor}
+                    </div>
+                  </div>
+
+                  {/* Progress bar for registration */}
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-rainbow h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${(session.registeredCount / session.maxParticipants) * 100}%` }}
+                    />
+                  </div>
+
+                  <div className="flex space-x-2">
+                    {isLive && session.isRegistered ? (
+                      <Button 
+                        onClick={() => handleJoinSession(session.id)}
+                        className="flex-1 bg-vibrant-red hover:bg-red-600 text-white animate-pulse"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Rejoindre maintenant
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => handleRegister(session._id || session.id, isRegistered)}
+                        disabled={isFull && !session.isRegistered}
+                        className={`flex-1 ${
+                          session.isRegistered 
+                            ? 'bg-gray-500 hover:bg-gray-600' 
+                            : 'bg-gradient-rainbow hover:opacity-90'
+                        } ${isFull && !session.isRegistered ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {session.isRegistered ? (
+                          <>
+                            <UserCheck className="h-4 w-4 mr-2" />
+                            Se désinscrire
+                          </>
+                        ) : isFull ? (
+                          'Complet'
+                        ) : (
+                          <>
+                            <UserCheck className="h-4 w-4 mr-2" />
+                            S'inscrire
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+
+        {sessions.filter(session => {
+            if (filter === 'upcoming') {
+              return new Date(session.startDateTime) >= new Date();
+            }
+            if (filter === 'registered') {
+              return currentUser && session.registeredUsers && session.registeredUsers.some(id => String(id) === String(currentUser._id));
+            }
+            return true;
+          }).length === 0 && (
+          <div className="text-center py-12">
+            <Video className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
+              Aucune session trouvée
+            </h3>
+            <p className="text-gray-500">
+              {filter === 'upcoming' 
+                ? "Aucune session programmée pour le moment. Revenez bientôt !"
+                : filter === 'registered'
+                ? "Vous n'êtes inscrit à aucune session pour le moment."
+                : "Aucune session disponible actuellement."
+              }
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

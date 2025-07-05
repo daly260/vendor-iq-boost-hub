@@ -1,13 +1,13 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, Play, Download, Brain, Clock, Star, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ProgressBar from '@/components/ProgressBar';
-import { learningModules } from '@/data/mockData';
 
 const Learning = () => {
+  const [modules, setModules] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
@@ -17,13 +17,20 @@ const Learning = () => {
   const types = ['all', 'video', 'guide', 'quiz'];
   const difficulties = ['all', 'beginner', 'intermediate', 'advanced'];
 
-  const filteredModules = learningModules.filter(module => {
+  useEffect(() => {
+    fetch('/backend/modules')
+      .then(res => res.json())
+      .then(data => { setModules(data); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const filteredModules = modules.filter(module => {
     const matchesSearch = module.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          module.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || module.category === selectedCategory;
     const matchesType = selectedType === 'all' || module.type === selectedType;
     const matchesDifficulty = selectedDifficulty === 'all' || module.difficulty === selectedDifficulty;
-    
+
     return matchesSearch && matchesCategory && matchesType && matchesDifficulty;
   });
 
@@ -56,12 +63,13 @@ const Learning = () => {
 
   const handleModuleClick = (moduleId: string) => {
     console.log(`Opening module ${moduleId}`);
-    // Animation de succès
+    // Future: Navigate or open module detail
   };
+
+  if (loading) return <div>Chargement...</div>;
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold bg-gradient-rainbow bg-clip-text text-transparent mb-4">
           🚀 Centre d'Apprentissage
@@ -71,7 +79,6 @@ const Learning = () => {
         </p>
       </div>
 
-      {/* Filters */}
       <Card>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -143,13 +150,12 @@ const Learning = () => {
         </CardContent>
       </Card>
 
-      {/* Modules Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredModules.map((module) => (
           <Card 
-            key={module.id} 
+            key={module._id} 
             className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden"
-            onClick={() => handleModuleClick(module.id)}
+            onClick={() => handleModuleClick(module._id)}
           >
             {module.thumbnail && (
               <div className="h-48 bg-cover bg-center relative overflow-hidden">
@@ -175,7 +181,7 @@ const Learning = () => {
                 </div>
               </div>
             )}
-            
+
             <CardContent className="p-6">
               <div className="flex justify-between items-start mb-3">
                 <Badge className={getDifficultyColor(module.difficulty)}>

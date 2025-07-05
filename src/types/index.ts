@@ -1,9 +1,9 @@
-
 export interface User {
-  id: string;
+  _id?: string;
+  id?: string; // for compatibility with old data
   name: string;
   email: string;
-  role: 'vendor' | 'admin';
+  role: 'user' | 'admin';
   level: number;
   points: number;
   badges: Badge[];
