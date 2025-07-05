@@ -226,29 +226,24 @@ const LiveSessions = () => {
                         Rejoindre maintenant
                       </Button>
                     ) : (
-                      <Button
-                        onClick={() => handleRegister(session._id || session.id, isRegistered)}
-                        disabled={isFull && !session.isRegistered}
-                        className={`flex-1 ${
-                          session.isRegistered 
-                            ? 'bg-gray-500 hover:bg-gray-600' 
-                            : 'bg-gradient-rainbow hover:opacity-90'
-                        } ${isFull && !session.isRegistered ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      >
-                        {session.isRegistered ? (
-                          <>
-                            <UserCheck className="h-4 w-4 mr-2" />
-                            Se désinscrire
-                          </>
-                        ) : isFull ? (
-                          'Complet'
-                        ) : (
-                          <>
-                            <UserCheck className="h-4 w-4 mr-2" />
-                            S'inscrire
-                          </>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                        <button
+                          onClick={() => handleRegister(session._id, isRegistered)}
+                          style={{ background: isRegistered ? '#aaa' : '#0070f3', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, cursor: 'pointer' }}
+                        >
+                          {isRegistered ? "Se désinscrire" : "S'inscrire"}
+                        </button>
+                        {session.link && (
+                          <a
+                            href={session.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ background: '#0070f3', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, textDecoration: 'none', cursor: 'pointer' }}
+                          >
+                            Joindre la session
+                          </a>
                         )}
-                      </Button>
+                      </div>
                     )}
                   </div>
                 </CardContent>
