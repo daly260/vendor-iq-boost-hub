@@ -1076,7 +1076,7 @@ const Admin: React.FC = () => {
                 </label>
                 <input
                   name="link"
-                  value={editSession.link}
+                  value={editSession.link || ''}
                   onChange={e => setEditSession({ ...editSession, link: e.target.value })}
                   className="block w-full border border-gray-300 rounded-md p-2"
                   placeholder="https://exemple.com/ma-session-live"

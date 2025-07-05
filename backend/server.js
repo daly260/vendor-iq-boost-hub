@@ -93,6 +93,7 @@ const liveSessionSchema = new mongoose.Schema({
   registeredCount: Number,
   registeredUsers: [{ type: String }], // user IDs
   meetingLink: String,
+  link: { type: String },
 });
 const LiveSession = mongoose.models.LiveSession || mongoose.model('LiveSession', liveSessionSchema);
 
