@@ -29,9 +29,9 @@ export default function LoginPage() {
 
       // Redirect based on role
       if (data.role === "admin") {
-        navigate("/admin-dashboard");
+        navigate("/admin");
       } else {
-        navigate("/user-dashboard");
+        navigate("/");
       }
 
     } catch (err: any) {
