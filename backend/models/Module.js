@@ -4,6 +4,7 @@ const moduleSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: String,
   type: { type: String, enum: ['video', 'quiz', 'guide'], required: true },
+  link: { type: String }, // Add link field for video URL
   category: String,
   difficulty: { type: String, enum: ['beginner', 'intermediate', 'advanced'] },
   duration: Number,

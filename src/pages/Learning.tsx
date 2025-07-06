@@ -4,14 +4,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ProgressBar from '@/components/ProgressBar';
+import { useAuth } from '@/pages/AuthContext';
 
 const Learning = () => {
+  const { user: currentUser } = useAuth();
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState('all');
+  const [progressList, setProgressList] = useState([]);
+  const [videos, setVideos] = useState([]);
+  const userId = currentUser?._id;
 
   const categories = ['all', 'Marketing', 'Logistique', 'Stratégie', 'Analytics'];
   const types = ['all', 'video', 'guide', 'quiz'];
@@ -23,6 +28,13 @@ const Learning = () => {
       .then(data => { setModules(data); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+    fetch(`/backend/progress/${userId}`)
+      .then(res => res.json())
+      .then(setProgressList);
+  }, [userId]);
 
   const filteredModules = modules.filter(module => {
     const matchesSearch = module.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -65,6 +77,28 @@ const Learning = () => {
     console.log(`Opening module ${moduleId}`);
     // Future: Navigate or open module detail
   };
+
+  function getVideoProgress(moduleId) {
+    const progress = progressList.find(p => p.moduleId === moduleId);
+    return progress ? progress.progress : 0;
+  }
+
+  async function markVideoComplete(moduleId) {
+    await fetch('/backend/progress', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId,
+        moduleId,
+        status: 'completed',
+        progress: 100,
+        completedAt: new Date()
+      })
+    });
+    // Refresh progress
+    const res = await fetch(`/backend/progress/${userId}`);
+    setProgressList(await res.json());
+  }
 
   if (loading) return <div>Chargement...</div>;
 
@@ -224,6 +258,43 @@ const Learning = () => {
                    module.progress > 0 ? 'Continuer' : 'Commencer'}
                 </Button>
               </div>
+
+              {module.type === 'video' && (
+                <div className="mt-4">
+                  {Array.isArray(videos) && videos.map(video => (
+                    <div key={video._id} className="mb-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-semibold">{video.title}</span>
+                        <span className="text-xs text-gray-500">{video.duration} min</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={() => {/* Open video in modal or new page */}}
+                        >
+                          <Play className="h-4 w-4 mr-2" />
+                          {getVideoProgress(video._id) === 100 ? 'Revoir' : 'Regarder'}
+                        </Button>
+                        <div className="text-xs text-gray-500">
+                          Progress: {getVideoProgress(video._id)}%
+                          {getVideoProgress(video._id) === 100 ? (
+                            <span className="text-green-500 ml-2">✔ Terminé</span>
+                          ) : (
+                            <button 
+                              onClick={() => markVideoComplete(video._id)} 
+                              className="text-vibrant-blue ml-2"
+                            >
+                              Marquer comme terminé
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}

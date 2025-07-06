@@ -15,11 +15,14 @@ const Admin: React.FC = () => {
   const { toast } = useToast();
 
   // State for backend data
-  const [videos, setVideos] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
   const [liveSessions, setLiveSessions] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Video CRUD state
+  const [videos, setVideos] = useState([]);
+  const [editVideo, setEditVideo] = useState(null);
 
   const tabs = [
     { id: 'dashboard', label: '📊 Tableau de bord', icon: BarChart3 },
@@ -34,13 +37,11 @@ const Admin: React.FC = () => {
     async function fetchData() {
       setLoading(true);
       try {
-        const [videosRes, quizzesRes, liveRes, usersRes] = await Promise.all([
-          fetch('/modules?type=video'),
+        const [quizzesRes, liveRes, usersRes] = await Promise.all([
           fetch('/modules?type=quiz'),
           fetch('/live-sessions'),
           fetch('/users')
         ]);
-        setVideos(await videosRes.json());
         setQuizzes(await quizzesRes.json());
         setLiveSessions(await liveRes.json());
         setUsers(await usersRes.json());
@@ -51,6 +52,20 @@ const Admin: React.FC = () => {
       }
     }
     fetchData();
+  }, []);
+
+  // Fetch videos on mount
+  useEffect(() => {
+    async function fetchVideos() {
+      try {
+        const res = await fetch('/backend/modules?type=video');
+        const data = await res.json();
+        setVideos(Array.isArray(data) ? data : []);
+      } catch {
+        setVideos([]);
+      }
+    }
+    fetchVideos();
   }, []);
 
   // Tickets logic
@@ -273,6 +288,9 @@ const Admin: React.FC = () => {
     }
   };
 
+  // Add state for editing video
+  const [editVideoState, setEditVideoState] = useState(null);
+
   if (loading) return <div>Chargement...</div>;
 
   return (
@@ -412,30 +430,44 @@ const Admin: React.FC = () => {
             {videos.length === 0 ? (
               <p>Aucune vidéo trouvée.</p>
             ) : (
-              <div className="space-y-4">
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+                {/* Video List Section */}
                 {videos.map((video) => (
-                  <div key={video.id} className="p-4 rounded-lg border border-gray-300 bg-gray-50">
-                    <h3 className="font-semibold text-lg">{video.title}</h3>
-                    <p className="text-gray-700 dark:text-gray-300 mb-2">{video.description}</p>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="text-xs rounded-full bg-blue-100 text-blue-800 px-3 py-1">
-                        Vidéo
-                      </span>
-                      <span className="text-xs rounded-full bg-green-100 text-green-800 px-3 py-1">
-                        {video.points} points
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center mt-4">
-                      <Button
-                        size="sm"
-                        className="bg-gradient-rainbow hover:opacity-90 text-white"
-                        onClick={() => window.open(video.videoUrl, '_blank')}
+                  <div key={video._id} style={{ width: 300, border: '1px solid #eee', borderRadius: 8, padding: 16, background: '#fafbfc', boxShadow: '0 2px 8px #0001', marginBottom: 16 }}>
+                    <h4 style={{ margin: 0 }}>{video.title}</h4>
+                    <p style={{ color: '#666', fontSize: 14 }}>{video.description}</p>
+                    {video.thumbnail && <img src={video.thumbnail} alt={video.title} style={{ width: '100%', borderRadius: 4, marginBottom: 8 }} />}
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <button
+                        onClick={() => setEditVideo(video)}
+                        style={{ background: '#0070f3', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, cursor: 'pointer' }}
                       >
-                        Regarder
-                      </Button>
+                        Modifier
+                      </button>
+                      <button
+                        onClick={async () => { await fetch(`/backend/modules/${video._id}`, { method: 'DELETE' }); setVideos(videos.filter(v => v._id !== video._id)); }}
+                        style={{ background: '#e53e3e', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, cursor: 'pointer' }}
+                      >
+                        Supprimer
+                      </button>
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+            {editVideo && (
+              <div style={{
+                position: 'fixed', left: 0, top: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+              }}>
+                <div style={{ background: '#fff', borderRadius: 8, padding: 32, minWidth: 320, boxShadow: '0 2px 16px #0002' }}>
+                  <h3 style={{ marginTop: 0 }}>Modifier la vidéo</h3>
+                  <input name="title" value={editVideo.title || ''} onChange={e => setEditVideo({ ...editVideo, title: e.target.value })} placeholder="Titre" style={{ width: '100%', marginBottom: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc' }} />
+                  <input name="description" value={editVideo.description || ''} onChange={e => setEditVideo({ ...editVideo, description: e.target.value })} placeholder="Description" style={{ width: '100%', marginBottom: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc' }} />
+                  <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                    <button onClick={async () => { await fetch(`/backend/modules/${editVideo._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editVideo) }); setEditVideo(null); const res = await fetch('/backend/modules?type=video'); setVideos(await res.json()); }} style={{ background: '#0070f3', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, cursor: 'pointer' }}>Enregistrer</button>
+                    <button onClick={() => setEditVideo(null)} style={{ background: '#aaa', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, cursor: 'pointer' }}>Annuler</button>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>
