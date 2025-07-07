@@ -6,27 +6,126 @@ import { Badge } from '@/components/ui/badge';
 import ProgressBar from '@/components/ProgressBar';
 import { useAuth } from '@/pages/AuthContext';
 
-const YouTubePlayerModal = ({ videoUrl, open, onClose }) => {
-  const iframeRef = useRef(null);
-  if (!open) return null;
+// @ts-ignore
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady: any;
+  }
+}
+
+const YouTubePlayerModal = ({ videoUrl, open, onClose, userId, moduleId, onProgressUpdate, lastWatchedTime }) => {
+  const playerRef = useRef(null);
+  const [player, setPlayer] = useState(null);
+  const [lastSentProgress, setLastSentProgress] = useState(0);
+  const intervalRef = useRef(null);
+
   // Extract YouTube video ID from URL
   const match = videoUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/#\s]{11})/);
   const videoId = match ? match[1] : null;
+
+  useEffect(() => {
+    if (!open || !videoId) return;
+    // Load YouTube IFrame API if not already loaded
+    if (!window.YT) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      document.body.appendChild(tag);
+    }
+    // Wait for YT to be ready
+    let lastBackendSent = 0;
+    const onYouTubeIframeAPIReady = () => {
+      if (playerRef.current && !player) {
+        const ytPlayer = new window.YT.Player(playerRef.current, {
+          videoId,
+          events: {
+            onReady: (event) => {
+              if (lastWatchedTime && lastWatchedTime > 0) {
+                event.target.seekTo(lastWatchedTime, true);
+              }
+            },
+            onStateChange: (event) => {
+              if (event.data === window.YT.PlayerState.PLAYING) {
+                if (!intervalRef.current) {
+                  intervalRef.current = setInterval(async () => {
+                    const current = ytPlayer.getCurrentTime();
+                    const duration = ytPlayer.getDuration();
+                    if (duration > 0) {
+                      const percent = Math.floor((current / duration) * 100);
+                      if (onProgressUpdate) {
+                        onProgressUpdate(percent); // update UI instantly
+                      }
+                      // Send to backend every 5 seconds or on 100%
+                      const now = Date.now();
+                      if (percent === 100 || now - lastBackendSent > 5000) {
+                        lastBackendSent = now;
+                        await fetch('http://localhost:3001/backend/progress', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            userId,
+                            moduleId,
+                            status: percent === 100 ? 'completed' : 'in-progress',
+                            progress: percent,
+                            completedAt: percent === 100 ? new Date() : undefined,
+                            lastWatchedTime: current
+                          })
+                        });
+                      }
+                    }
+                  }, 500);
+                }
+              } else if (event.data === window.YT.PlayerState.ENDED) {
+                setLastSentProgress(100);
+                fetch('http://localhost:3001/backend/progress', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    userId,
+                    moduleId,
+                    status: 'completed',
+                    progress: 100,
+                    completedAt: new Date(),
+                    lastWatchedTime: ytPlayer.getDuration()
+                  })
+                });
+                if (onProgressUpdate) onProgressUpdate(100);
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+              } else if (event.data === window.YT.PlayerState.PAUSED || event.data === window.YT.PlayerState.BUFFERING) {
+                if (intervalRef.current) {
+                  clearInterval(intervalRef.current);
+                  intervalRef.current = null;
+                }
+              }
+            },
+          },
+        });
+        setPlayer(ytPlayer);
+      }
+    };
+    if (window.YT && window.YT.Player) {
+      onYouTubeIframeAPIReady();
+    } else {
+      window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (player) player.destroy && player.destroy();
+      setPlayer(null);
+    };
+    // eslint-disable-next-line
+  }, [open, videoId, lastWatchedTime]);
+
+  if (!open) return null;
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: '#fff', borderRadius: 8, padding: 24, position: 'relative', maxWidth: 800, width: '90vw' }}>
         <button onClick={onClose} style={{ position: 'absolute', top: 8, right: 8, fontSize: 24, background: 'none', border: 'none', cursor: 'pointer' }}>&times;</button>
         {videoId ? (
-          <iframe
-            ref={iframeRef}
-            width="720"
-            height="405"
-            src={`https://www.youtube.com/embed/${videoId}?enablejsapi=1`}
-            title="YouTube video player"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
+          <div>
+            <div ref={playerRef} id="ytplayer-embed" style={{ width: 720, height: 405 }} />
+          </div>
         ) : (
           <div>Invalid YouTube URL</div>
         )}
@@ -47,6 +146,8 @@ const Learning = () => {
   const [videos, setVideos] = useState([]);
   const [playerModalOpen, setPlayerModalOpen] = useState(false);
   const [currentVideoUrl, setCurrentVideoUrl] = useState("");
+  const [currentModuleId, setCurrentModuleId] = useState("");
+  const [claimedModules, setClaimedModules] = useState([]);
   const userId = currentUser?._id;
 
   const categories = ['all', 'Marketing', 'Logistique', 'Stratégie', 'Analytics'];
@@ -56,15 +157,22 @@ const Learning = () => {
   useEffect(() => {
     fetch('/backend/modules')
       .then(res => res.json())
-      .then(data => { setModules(data); setLoading(false); })
+      .then(data => { 
+        setModules(data); 
+        setLoading(false);
+        console.log('Modules loaded:', data);
+      })
       .catch(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     if (!userId) return;
-    fetch(`/backend/progress/${userId}`)
+    fetch(`http://localhost:3001/backend/progress/${userId}`)
       .then(res => res.json())
-      .then(setProgressList);
+      .then(data => {
+        setProgressList(data);
+        console.log('ProgressList loaded:', data);
+      });
   }, [userId]);
 
   const filteredModules = modules.filter(module => {
@@ -110,8 +218,17 @@ const Learning = () => {
   };
 
   function getVideoProgress(moduleId) {
-    const progress = progressList.find(p => p.moduleId === moduleId);
+    // Compare as strings to avoid type mismatch
+    const progress = progressList.find(p => String(p.moduleId) === String(moduleId));
     return progress ? progress.progress : 0;
+  }
+
+  function getVideoStatus(moduleId) {
+    const progress = progressList.find(p => String(p.moduleId) === String(moduleId));
+    if (!progress) return 'not-started';
+    if (progress.progress >= 100) return 'completed';
+    if (progress.progress > 0) return 'in-progress';
+    return 'not-started';
   }
 
   async function markVideoComplete(moduleId) {
@@ -265,11 +382,11 @@ const Learning = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-500">Progression</span>
-                  <span className="font-semibold">{Math.round(module.progress)}%</span>
+                  <span className="font-semibold">{getVideoProgress(module._id)}%</span>
                 </div>
                 <ProgressBar 
-                  progress={module.progress}
-                  color={module.completed ? 'green' : 'blue'}
+                  progress={getVideoProgress(module._id)}
+                  color={getVideoStatus(module._id) === 'completed' ? 'green' : 'blue'}
                 />
               </div>
 
@@ -279,11 +396,11 @@ const Learning = () => {
                 </Badge>
                 <Button 
                   size="sm" 
-                  className={`${module.completed ? 'bg-vibrant-green' : 'bg-gradient-rainbow'} hover:opacity-90`}
+                  className={`${getVideoStatus(module._id) === 'completed' ? 'bg-vibrant-green' : 'bg-gradient-rainbow'} hover:opacity-90`}
                   onClick={async (e) => {
                     e.stopPropagation();
-                    if (!module.completed) {
-                      if (!module.progress || module.progress === 0) {
+                    if (getVideoStatus(module._id) !== 'completed') {
+                      if (getVideoProgress(module._id) === 0) {
                         await fetch('http://localhost:3001/backend/progress', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
@@ -298,19 +415,21 @@ const Learning = () => {
                         const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
                         setProgressList(await res.json());
                       }
-                      // Open embedded YouTube player modal
                       if (module.videoUrl) {
                         setCurrentVideoUrl(module.videoUrl);
+                        setCurrentModuleId(module._id);
                         setPlayerModalOpen(true);
                       } else if (module.link) {
                         setCurrentVideoUrl(module.link);
+                        setCurrentModuleId(module._id);
                         setPlayerModalOpen(true);
                       }
                     }
                   }}
+                  disabled={getVideoStatus(module._id) === 'completed'}
                 >
-                  {module.completed ? '✓ Terminé' : 
-                   module.progress > 0 ? 'Continuer' : 'Commencer'}
+                  {getVideoStatus(module._id) === 'completed' ? '✓ Terminé' :
+                   getVideoProgress(module._id) > 0 ? 'Continuer' : 'Commencer'}
                 </Button>
               </div>
 
@@ -350,6 +469,30 @@ const Learning = () => {
                   ))}
                 </div>
               )}
+
+              {getVideoStatus(module._id) === 'completed' && !claimedModules.includes(module._id) && (
+                <Button
+                  size="sm"
+                  className="bg-vibrant-green mt-2"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const res = await fetch('http://localhost:3001/backend/progress/claim-points', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ userId, moduleId: module._id })
+                    });
+                    if (res.ok) {
+                      setClaimedModules([...claimedModules, module._id]);
+                      alert('Points claimed!');
+                    } else {
+                      const data = await res.json();
+                      alert(data.error || 'Failed to claim points');
+                    }
+                  }}
+                >
+                  Réclamer les points
+                </Button>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -367,7 +510,21 @@ const Learning = () => {
         </div>
       )}
 
-      <YouTubePlayerModal videoUrl={currentVideoUrl} open={playerModalOpen} onClose={() => setPlayerModalOpen(false)} />
+      <YouTubePlayerModal
+        videoUrl={currentVideoUrl}
+        open={playerModalOpen}
+        onClose={() => setPlayerModalOpen(false)}
+        userId={userId}
+        moduleId={currentModuleId}
+        lastWatchedTime={(() => {
+          const progress = progressList.find(p => String(p.moduleId) === String(currentModuleId));
+          return progress ? progress.lastWatchedTime : 0;
+        })()}
+        onProgressUpdate={async (percent) => {
+          const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
+          setProgressList(await res.json());
+        }}
+      />
     </div>
   );
 };
