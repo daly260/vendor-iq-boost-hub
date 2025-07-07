@@ -1,10 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, Filter, Play, Download, Brain, Clock, Star, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ProgressBar from '@/components/ProgressBar';
 import { useAuth } from '@/pages/AuthContext';
+
+const YouTubePlayerModal = ({ videoUrl, open, onClose }) => {
+  const iframeRef = useRef(null);
+  if (!open) return null;
+  // Extract YouTube video ID from URL
+  const match = videoUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/#\s]{11})/);
+  const videoId = match ? match[1] : null;
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: '#fff', borderRadius: 8, padding: 24, position: 'relative', maxWidth: 800, width: '90vw' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: 8, right: 8, fontSize: 24, background: 'none', border: 'none', cursor: 'pointer' }}>&times;</button>
+        {videoId ? (
+          <iframe
+            ref={iframeRef}
+            width="720"
+            height="405"
+            src={`https://www.youtube.com/embed/${videoId}?enablejsapi=1`}
+            title="YouTube video player"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        ) : (
+          <div>Invalid YouTube URL</div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const Learning = () => {
   const { user: currentUser } = useAuth();
@@ -16,6 +45,8 @@ const Learning = () => {
   const [selectedDifficulty, setSelectedDifficulty] = useState('all');
   const [progressList, setProgressList] = useState([]);
   const [videos, setVideos] = useState([]);
+  const [playerModalOpen, setPlayerModalOpen] = useState(false);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState("");
   const userId = currentUser?._id;
 
   const categories = ['all', 'Marketing', 'Logistique', 'Stratégie', 'Analytics'];
@@ -84,7 +115,7 @@ const Learning = () => {
   }
 
   async function markVideoComplete(moduleId) {
-    await fetch('/backend/progress', {
+    await fetch('http://localhost:3001/backend/progress', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -96,7 +127,7 @@ const Learning = () => {
       })
     });
     // Refresh progress
-    const res = await fetch(`/backend/progress/${userId}`);
+    const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
     setProgressList(await res.json());
   }
 
@@ -251,30 +282,29 @@ const Learning = () => {
                   className={`${module.completed ? 'bg-vibrant-green' : 'bg-gradient-rainbow'} hover:opacity-90`}
                   onClick={async (e) => {
                     e.stopPropagation();
-                    // Only redirect if not completed
                     if (!module.completed) {
-                      // Update progress to 'in progress' (1%) if not already started
                       if (!module.progress || module.progress === 0) {
-                        await fetch('/backend/progress', {
+                        await fetch('http://localhost:3001/backend/progress', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
                             userId,
                             moduleId: module._id,
-                            status: 'in progress',
+                            status: 'in-progress',
                             progress: 1,
                             startedAt: new Date()
                           })
                         });
-                        // Optionally refresh progress
-                        const res = await fetch(`/backend/progress/${userId}`);
+                        const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
                         setProgressList(await res.json());
                       }
-                      // Redirect to the module's link
+                      // Open embedded YouTube player modal
                       if (module.videoUrl) {
-                        window.open(module.videoUrl, '_blank');
+                        setCurrentVideoUrl(module.videoUrl);
+                        setPlayerModalOpen(true);
                       } else if (module.link) {
-                        window.open(module.link, '_blank');
+                        setCurrentVideoUrl(module.link);
+                        setPlayerModalOpen(true);
                       }
                     }
                   }}
@@ -336,6 +366,8 @@ const Learning = () => {
           </p>
         </div>
       )}
+
+      <YouTubePlayerModal videoUrl={currentVideoUrl} open={playerModalOpen} onClose={() => setPlayerModalOpen(false)} />
     </div>
   );
 };
