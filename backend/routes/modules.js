@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Module = require('../models/Module');
 
+console.log('✅ modules.js router loaded');
+
 // Get modules (optionally filter by type)
 router.get('/', async (req, res) => {
   try {
@@ -27,6 +29,8 @@ router.post('/', async (req, res) => {
 
 // Update a module
 router.put('/:id', async (req, res) => {
+  console.log('PUT /backend/modules/:id called with id:', req.params.id);
+  console.log('Request body:', req.body);
   try {
     const moduleDoc = await Module.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!moduleDoc) return res.status(404).json({ error: 'Module not found' });

@@ -20,7 +20,7 @@ const Learning = () => {
 
   const categories = ['all', 'Marketing', 'Logistique', 'Stratégie', 'Analytics'];
   const types = ['all', 'video', 'guide', 'quiz'];
-  const difficulties = ['all', 'beginner', 'intermediate', 'advanced'];
+  const niveaux = ['Débutant', 'Intermédiaire', 'Avancé'];
 
   useEffect(() => {
     fetch('/backend/modules')
@@ -158,12 +158,9 @@ const Learning = () => {
               onChange={(e) => setSelectedDifficulty(e.target.value)}
               className="py-2 px-3 bg-gray-100 dark:bg-gray-700 rounded-lg border-0 focus:ring-2 focus:ring-vibrant-blue"
             >
-              {difficulties.map(diff => (
-                <option key={diff} value={diff}>
-                  {diff === 'all' ? 'Tous niveaux' :
-                   diff === 'beginner' ? 'Débutant' :
-                   diff === 'intermediate' ? 'Intermédiaire' : 'Avancé'}
-                </option>
+              <option value="">Tous niveaux</option>
+              {niveaux.map(niveau => (
+                <option key={niveau} value={niveau}>{niveau}</option>
               ))}
             </select>
 
@@ -219,8 +216,7 @@ const Learning = () => {
             <CardContent className="p-6">
               <div className="flex justify-between items-start mb-3">
                 <Badge className={getDifficultyColor(module.difficulty)}>
-                  {module.difficulty === 'beginner' ? 'Débutant' :
-                   module.difficulty === 'intermediate' ? 'Intermédiaire' : 'Avancé'}
+                  {module.difficulty}
                 </Badge>
                 <div className="flex items-center space-x-1 text-vibrant-orange">
                   <Star className="h-4 w-4" />
