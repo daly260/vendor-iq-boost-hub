@@ -19,11 +19,13 @@ router.get('/', async (req, res) => {
 // Create a module
 router.post('/', async (req, res) => {
   try {
+    console.log('POST /backend/modules payload:', req.body);
     const moduleDoc = new Module(req.body);
     await moduleDoc.save();
     res.status(201).json(moduleDoc);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to create module' });
+    console.error('Error creating module:', err);
+    res.status(500).json({ error: 'Failed to create module', details: err.message });
   }
 });
 

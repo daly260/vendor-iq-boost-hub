@@ -194,27 +194,36 @@ const Admin: React.FC = () => {
   const handleFormChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+  const DIFFICULTY_MAP = {
+    beginner: 'Débutant',
+    intermediate: 'Intermédiaire',
+    advanced: 'Avancé',
+    'Débutant': 'Débutant',
+    'Intermédiaire': 'Intermédiaire',
+    'Avancé': 'Avancé',
+  };
   const handleSubmit = async (type) => {
     let url = '';
     let body = {};
     if (type === 'video') {
-      url = '/modules';
-      body = { ...formData, type: 'video' };
-      // Check required fields
+      url = '/backend/modules';
+      body = {
+        ...formData,
+        type: 'video',
+        difficulty: DIFFICULTY_MAP[formData.difficulty] || formData.difficulty,
+        points: Number(formData.points) || 0,
+        duration: Number(formData.duration) || 0,
+        completed: false,
+        progress: 0,
+      };
       if (
-        !body || typeof body !== 'object' ||
-        !('title' in body) ||
-        !('description' in body) ||
-        !('videoUrl' in body) ||
-        !('points' in body) ||
-        !('category' in body) ||
-        !('difficulty' in body) ||
-        !body.title ||
-        !body.description ||
-        !body.videoUrl ||
-        !body.points ||
-        !body.category ||
-        !body.difficulty
+        !formData || typeof formData !== 'object' ||
+        !formData.title ||
+        !formData.description ||
+        !formData.videoUrl ||
+        !formData.points ||
+        !formData.category ||
+        !formData.difficulty
       ) {
         alert('Veuillez remplir tous les champs obligatoires.');
         return;
@@ -463,13 +472,8 @@ const Admin: React.FC = () => {
                   <h3 style={{ marginTop: 0 }}>Modifier la vidéo</h3>
                   <input name="title" value={editVideo.title || ''} onChange={e => setEditVideo({ ...editVideo, title: e.target.value })} placeholder="Titre" style={{ width: '100%', marginBottom: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc' }} />
                   <input name="description" value={editVideo.description || ''} onChange={e => setEditVideo({ ...editVideo, description: e.target.value })} placeholder="Description" style={{ width: '100%', marginBottom: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc' }} />
-                  <input name="link" value={editVideo.link || ''} onChange={e => setEditVideo({ ...editVideo, link: e.target.value })} placeholder="Lien de la vidéo" style={{ width: '100%', marginBottom: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc' }} />
-                  <input name="videoUrl" value={editVideo.videoUrl || ''} onChange={e => setEditVideo({ ...editVideo, videoUrl: e.target.value })} placeholder="URL de la vidéo" style={{ width: '100%', marginBottom: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc' }} />
-                  <input name="category" value={editVideo.category || ''} onChange={e => setEditVideo({ ...editVideo, category: e.target.value })} placeholder="Catégorie" style={{ width: '100%', marginBottom: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc' }} />
-                  <input name="difficulty" value={editVideo.difficulty || ''} onChange={e => setEditVideo({ ...editVideo, difficulty: e.target.value })} placeholder="Niveau (Débutant, Intermédiaire, Avancé)" style={{ width: '100%', marginBottom: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc' }} />
-                  <input name="duration" type="number" value={editVideo.duration || ''} onChange={e => setEditVideo({ ...editVideo, duration: e.target.value })} placeholder="Durée (minutes)" style={{ width: '100%', marginBottom: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc' }} />
-                  <input name="points" type="number" value={editVideo.points || ''} onChange={e => setEditVideo({ ...editVideo, points: e.target.value })} placeholder="Points" style={{ width: '100%', marginBottom: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc' }} />
-                  <input name="thumbnail" value={editVideo.thumbnail || ''} onChange={e => setEditVideo({ ...editVideo, thumbnail: e.target.value })} placeholder="URL de la miniature" style={{ width: '100%', marginBottom: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc' }} />
+                  <input name="videoUrl" value={editVideo.videoUrl || ''} onChange={e => setEditVideo({ ...editVideo, videoUrl: e.target.value })} placeholder="URL de la vidéo (videoUrl)" style={{ width: '100%', marginBottom: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc' }} />
+                  <input name="thumbnail" value={editVideo.thumbnail || ''} onChange={e => setEditVideo({ ...editVideo, thumbnail: e.target.value })} placeholder="URL de la miniature (thumbnail)" style={{ width: '100%', marginBottom: 12, padding: 8, borderRadius: 4, border: '1px solid #ccc' }} />
                   <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                     <button onClick={async () => { await fetch(`/backend/modules/${editVideo._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editVideo) }); setEditVideo(null); const res = await fetch('/backend/modules?type=video'); setVideos(await res.json()); }} style={{ background: '#0070f3', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, cursor: 'pointer' }}>Enregistrer</button>
                     <button onClick={() => setEditVideo(null)} style={{ background: '#aaa', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, cursor: 'pointer' }}>Annuler</button>
@@ -657,8 +661,8 @@ const Admin: React.FC = () => {
 
       {/* Add Video Modal */}
       {showAddVideo && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ overflowY: 'auto' }}>
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
             <h3 className="text-lg font-semibold mb-4">Ajouter une vidéo</h3>
             <div className="space-y-4">
               <div>

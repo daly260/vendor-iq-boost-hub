@@ -6,7 +6,7 @@ const moduleSchema = new mongoose.Schema({
   type: { type: String, enum: ['video', 'quiz', 'guide'], required: true },
   link: { type: String },
   videoUrl: { type: String },
-  category: { type: String, enum: ['Vente', 'Marketing', 'Formation', 'Autre'] },
+  category: { type: String, enum: ['Analytics', 'Marketing', 'Logistique', 'Stratégie'] },
   difficulty: { type: String, enum: ['Débutant', 'Intermédiaire', 'Avancé'] },
   duration: Number,
   points: Number,

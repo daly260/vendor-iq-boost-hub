@@ -249,6 +249,35 @@ const Learning = () => {
                 <Button 
                   size="sm" 
                   className={`${module.completed ? 'bg-vibrant-green' : 'bg-gradient-rainbow'} hover:opacity-90`}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    // Only redirect if not completed
+                    if (!module.completed) {
+                      // Update progress to 'in progress' (1%) if not already started
+                      if (!module.progress || module.progress === 0) {
+                        await fetch('/backend/progress', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            userId,
+                            moduleId: module._id,
+                            status: 'in progress',
+                            progress: 1,
+                            startedAt: new Date()
+                          })
+                        });
+                        // Optionally refresh progress
+                        const res = await fetch(`/backend/progress/${userId}`);
+                        setProgressList(await res.json());
+                      }
+                      // Redirect to the module's link
+                      if (module.videoUrl) {
+                        window.open(module.videoUrl, '_blank');
+                      } else if (module.link) {
+                        window.open(module.link, '_blank');
+                      }
+                    }
+                  }}
                 >
                   {module.completed ? '✓ Terminé' : 
                    module.progress > 0 ? 'Continuer' : 'Commencer'}
