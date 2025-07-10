@@ -34,6 +34,8 @@ const YouTubePlayerModal = ({ videoUrl, open, onClose, userId, moduleId, onProgr
     }
     // Wait for YT to be ready
     let lastBackendSent = 0;
+    let latestPercent = 0;
+    let latestTime = 0;
     const onYouTubeIframeAPIReady = () => {
       if (playerRef.current && !player) {
         const ytPlayer = new window.YT.Player(playerRef.current, {
@@ -52,28 +54,34 @@ const YouTubePlayerModal = ({ videoUrl, open, onClose, userId, moduleId, onProgr
                     const duration = ytPlayer.getDuration();
                     if (duration > 0) {
                       const percent = Math.floor((current / duration) * 100);
+                      latestPercent = percent;
+                      latestTime = current;
                       if (onProgressUpdate) {
-                        onProgressUpdate(percent); // update UI instantly
+                        onProgressUpdate(percent);
                       }
-                      // Send to backend every 5 seconds or on 100%
+                      // Send to backend every 1 second or on 100%
                       const now = Date.now();
-                      if (percent === 100 || now - lastBackendSent > 5000) {
+                      if (percent === 100 || now - lastBackendSent > 1000) {
                         lastBackendSent = now;
-                        await fetch('http://localhost:3001/backend/progress', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            userId,
-                            moduleId,
-                            status: percent === 100 ? 'completed' : 'in-progress',
-                            progress: percent,
-                            completedAt: percent === 100 ? new Date() : undefined,
-                            lastWatchedTime: current
-                          })
-                        });
+                        try {
+                          await fetch('http://localhost:3001/backend/progress', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              userId,
+                              moduleId,
+                              status: percent === 100 ? 'completed' : 'in-progress',
+                              progress: percent,
+                              completedAt: percent === 100 ? new Date() : undefined,
+                              lastWatchedTime: current
+                            })
+                          });
+                        } catch (err) {
+                          console.error('Failed to update progress:', err);
+                        }
                       }
                     }
-                  }, 500);
+                  }, 200);
                 }
               } else if (event.data === window.YT.PlayerState.ENDED) {
                 setLastSentProgress(100);
@@ -113,6 +121,20 @@ const YouTubePlayerModal = ({ videoUrl, open, onClose, userId, moduleId, onProgr
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (player) player.destroy && player.destroy();
       setPlayer(null);
+      // On unmount or modal close, store the latest progress
+      if (latestPercent > 0 && latestPercent < 100) {
+        fetch('http://localhost:3001/backend/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            moduleId,
+            status: 'in-progress',
+            progress: latestPercent,
+            lastWatchedTime: latestTime
+          })
+        });
+      }
     };
     // eslint-disable-next-line
   }, [open, videoId, lastWatchedTime]);
@@ -149,6 +171,7 @@ const Learning = () => {
   const [currentModuleId, setCurrentModuleId] = useState("");
   const [claimedModules, setClaimedModules] = useState([]);
   const userId = currentUser?._id;
+  const [liveProgress, setLiveProgress] = useState({}); // { [moduleId]: percent }
 
   const categories = ['all', 'Marketing', 'Logistique', 'Stratégie', 'Analytics'];
   const types = ['all', 'video', 'guide', 'quiz'];
@@ -246,6 +269,12 @@ const Learning = () => {
     // Refresh progress
     const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
     setProgressList(await res.json());
+  }
+
+  function getLiveOrSavedProgress(moduleId) {
+    // Prefer live progress if available, else use saved progress
+    if (liveProgress[moduleId] !== undefined) return liveProgress[moduleId];
+    return getVideoProgress(moduleId);
   }
 
   if (loading) return <div>Chargement...</div>;
@@ -382,14 +411,13 @@ const Learning = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-500">Progression</span>
-                  <span className="font-semibold">{getVideoProgress(module._id)}%</span>
+                  <span className="font-semibold">{getLiveOrSavedProgress(module._id)}%</span>
                 </div>
                 <ProgressBar 
-                  progress={getVideoProgress(module._id)}
+                  progress={getLiveOrSavedProgress(module._id)}
                   color={getVideoStatus(module._id) === 'completed' ? 'green' : 'blue'}
                 />
               </div>
-
               <div className="mt-4 flex justify-between items-center">
                 <Badge variant="outline" className="text-xs">
                   {module.category}
@@ -521,8 +549,13 @@ const Learning = () => {
           return progress ? progress.lastWatchedTime : 0;
         })()}
         onProgressUpdate={async (percent) => {
-          const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
-          setProgressList(await res.json());
+          setLiveProgress(prev => ({ ...prev, [currentModuleId]: percent }));
+          if (percent === 100) {
+            // Refresh backend progress on completion
+            const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
+            setProgressList(await res.json());
+            setLiveProgress(prev => ({ ...prev, [currentModuleId]: undefined }));
+          }
         }}
       />
     </div>

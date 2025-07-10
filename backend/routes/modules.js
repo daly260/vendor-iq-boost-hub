@@ -36,6 +36,7 @@ router.put('/:id', async (req, res) => {
   try {
     const moduleDoc = await Module.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!moduleDoc) return res.status(404).json({ error: 'Module not found' });
+    console.log('Updated module:', moduleDoc);
     res.json(moduleDoc);
   } catch (err) {
     res.status(500).json({ error: 'Failed to update module' });

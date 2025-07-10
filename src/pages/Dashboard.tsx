@@ -111,7 +111,32 @@ const Dashboard = () => {
   }
 
   const recentModules = modules.slice(0, 3);
+  // Calculate next level points and progress
   const nextLevelPoints = (currentUser.level + 1) * 500;
+  const levelProgress = Math.min(100, Math.round((currentUser.points / nextLevelPoints) * 100));
+
+  // Calculate total study time (sum durations of completed modules)
+  const completedModulesList = modules.filter(m => m.completed);
+  const totalStudyMinutes = completedModulesList.reduce((sum, m) => sum + (m.duration || 0), 0);
+  const totalStudyHours = Math.floor(totalStudyMinutes / 60);
+  const totalStudyMinutesRemainder = totalStudyMinutes % 60;
+  const totalStudyTimeStr = `${totalStudyHours > 0 ? totalStudyHours + 'h ' : ''}${totalStudyMinutesRemainder}min`;
+
+  // Find the next upcoming live session
+  const now = new Date();
+  const upcomingSessions = liveSessions.filter(s => {
+    // Try to parse date/time
+    let sessionDate = s.startDateTime ? new Date(s.startDateTime) : (s.date ? new Date(s.date) : null);
+    if (!sessionDate) return false;
+    return sessionDate > now;
+  });
+  upcomingSessions.sort((a, b) => {
+    const aDate = a.startDateTime ? new Date(a.startDateTime) : (a.date ? new Date(a.date) : new Date(0));
+    const bDate = b.startDateTime ? new Date(b.startDateTime) : (b.date ? new Date(b.date) : new Date(0));
+    return aDate.getTime() - bDate.getTime();
+  });
+  const nextSession = upcomingSessions[0];
+
   const completedModules = modules.filter(m => m.completed).length;
   const totalModules = modules.length;
   const completionRate = totalModules > 0 ? (completedModules / totalModules) * 100 : 0;
@@ -148,7 +173,7 @@ const Dashboard = () => {
             />
             <div>
               <h1 className="text-2xl font-bold">
-                Salut {currentUser.name.split(' ')[0]} ! 👋
+                Salut {currentUser.name ? currentUser.name.split(' ')[0] : ''} ! 👋
               </h1>
               <p className="opacity-90">Prêt à booster tes ventes aujourd'hui ?</p>
             </div>
@@ -202,7 +227,7 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-pink-100">Temps d'Étude</p>
-                <p className="text-2xl font-bold">12h</p> {/* Replace with real data if available */}
+                <p className="text-2xl font-bold">{totalStudyTimeStr}</p>
               </div>
               <Clock className="h-8 w-8 opacity-80" />
             </div>
@@ -290,24 +315,26 @@ const Dashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {liveSessions.length > 0 && (
+              {nextSession ? (
                 <div className="space-y-3">
-                  <h3 className="font-semibold">{liveSessions[0].title}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{liveSessions[0].description}</p>
+                  <h3 className="font-semibold">{nextSession.title}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{nextSession.description}</p>
                   <div className="flex items-center space-x-2 text-sm">
                     <Calendar className="h-4 w-4" />
-                    <span>{liveSessions[0].date} à {liveSessions[0].time}</span>
+                    <span>{nextSession.startDateTime ? new Date(nextSession.startDateTime).toLocaleString() : nextSession.date + (nextSession.time ? ' à ' + nextSession.time : '')}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm">
                     <Users className="h-4 w-4" />
-                    <span>{liveSessions[0].registeredCount}/{liveSessions[0].maxParticipants} inscrits</span>
+                    <span>{nextSession.registeredCount}/{nextSession.maxParticipants} inscrits</span>
                   </div>
                   <Link to="/live-sessions">
                     <Button className="w-full bg-wamia-orange hover:opacity-90">
-                      {liveSessions[0].isRegistered ? 'Rejoindre' : 'S\'inscrire'}
+                      {nextSession.isRegistered ? 'Rejoindre' : 'S\'inscrire'}
                     </Button>
                   </Link>
                 </div>
+              ) : (
+                <div>Aucune session à venir</div>
               )}
             </CardContent>
           </Card>
