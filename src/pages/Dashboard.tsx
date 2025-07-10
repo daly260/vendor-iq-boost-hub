@@ -321,7 +321,16 @@ const Dashboard = () => {
                   <p className="text-sm text-gray-600 dark:text-gray-400">{nextSession.description}</p>
                   <div className="flex items-center space-x-2 text-sm">
                     <Calendar className="h-4 w-4" />
-                    <span>{nextSession.startDateTime ? new Date(nextSession.startDateTime).toLocaleString() : nextSession.date + (nextSession.time ? ' à ' + nextSession.time : '')}</span>
+                    <span>{nextSession.startDateTime
+                      ? new Date(nextSession.startDateTime).toLocaleString('fr-FR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })
+                      : nextSession.date + (nextSession.time ? ' à ' + nextSession.time : '')}
+                    </span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm">
                     <Users className="h-4 w-4" />

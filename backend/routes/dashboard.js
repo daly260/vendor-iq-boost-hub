@@ -1,6 +1,7 @@
 const express = require('express');
 const verifyToken = require('../middleware/verifyToken.js');
 const User = require('../models/User.js');
+const LiveSession = require('../models/LiveSession.js');
 
 const router = express.Router();
 
@@ -62,20 +63,15 @@ router.get('/modules', verifyToken, (req, res) => {
   ]);
 });
 
-// ✅ GET /live-sessions — static
-router.get('/live-sessions', verifyToken, (req, res) => {
-  res.json([
-    {
-      id: 'ls1',
-      title: 'Session Live: Boostez vos ventes',
-      description: 'Une session interactive pour apprendre ensemble',
-      date: '2025-07-01',
-      time: '18:00',
-      registeredCount: 5,
-      maxParticipants: 20,
-      isRegistered: true
-    }
-  ]);
+// ✅ GET /live-sessions — dynamic
+router.get('/live-sessions', verifyToken, async (req, res) => {
+  try {
+    const sessions = await LiveSession.find();
+    res.json(sessions);
+  } catch (err) {
+    console.error('Error fetching live sessions:', err);
+    res.status(500).json({ error: 'Failed to fetch live sessions' });
+  }
 });
 
 // ✅ POST /modules/:id/complete — updates user level/points
