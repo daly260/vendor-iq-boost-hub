@@ -9,8 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-
-const USER_ID = 'user123';
+import { useAuth } from '@/pages/AuthContext';
 
 type TicketType = 'bug' | 'question' | 'suggestion';
 type TicketStatus = 'open' | 'in-progress' | 'resolved' | 'closed';
@@ -34,6 +33,8 @@ interface Ticket {
 }
 
 const Tickets = () => {
+  const { user: currentUser } = useAuth();
+  const USER_ID = currentUser?._id || currentUser?.id;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -44,10 +45,11 @@ const Tickets = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchTickets();
-  }, []);
+    if (USER_ID) fetchTickets();
+  }, [USER_ID]);
 
   const fetchTickets = async () => {
+    if (!USER_ID) return;
     try {
       const res = await fetch(`http://localhost:3001/tickets?userId=${USER_ID}`);
       if (!res.ok) throw new Error('Failed to fetch tickets');
@@ -114,6 +116,7 @@ const Tickets = () => {
     }
 
     try {
+      if (!USER_ID) throw new Error('Utilisateur non connecté');
       const response = await fetch('http://localhost:3001/tickets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

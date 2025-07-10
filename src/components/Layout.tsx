@@ -82,7 +82,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   {user?.email?.[0]?.toUpperCase() || "?"}
                 </div>
                 <div>
-                  <p className="font-semibold font-body">{user?.email || "Utilisateur"}</p>
+                  <p className="font-semibold font-body">{user?.name || user?.email || "Utilisateur"}</p>
                   <p className="text-sm opacity-90 capitalize">{user?.role || "user"}</p>
                 </div>
               </div>

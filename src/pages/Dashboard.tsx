@@ -119,9 +119,9 @@ const Dashboard = () => {
     return <div className="p-6">Chargement...</div>;
   }
 
-  // Calculate next level points and progress
-  const nextLevelPoints = (currentUser.level + 1) * 500;
-  const levelProgress = Math.min(100, Math.round((currentUser.points / nextLevelPoints) * 100));
+  // Remove old nextLevelPoints calculation
+  // const nextLevelPoints = (currentUser.level + 1) * 500;
+  // const levelProgress = Math.min(100, Math.round((currentUser.points / nextLevelPoints) * 100));
 
   // Prioritize in-progress, then not-started, exclude completed
   const modulesWithProgress = modules.map(m => {
@@ -208,7 +208,7 @@ const Dashboard = () => {
             />
             <div>
               <h1 className="text-2xl font-bold">
-                Salut {currentUser.name ? currentUser.name.split(' ')[0] : ''} ! 👋
+                Salut {currentUser.name} ! 👋
               </h1>
               <p className="opacity-90">Prêt à booster tes ventes aujourd'hui ?</p>
             </div>
@@ -275,7 +275,6 @@ const Dashboard = () => {
           <LevelProgress
             currentLevel={currentUser.level}
             currentPoints={currentUser.points}
-            nextLevelPoints={nextLevelPoints}
           />
 
           <Card>

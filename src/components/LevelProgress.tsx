@@ -6,18 +6,27 @@ import ProgressBar from './ProgressBar';
 interface LevelProgressProps {
   currentLevel: number;
   currentPoints: number;
-  nextLevelPoints: number;
   className?: string;
+}
+
+const basePoints = 500;
+const growth = 1.2;
+
+function totalPointsForLevel(level: number, basePoints = 500, growth = 1.2) {
+  if (level <= 1) return 0;
+  return Math.round(basePoints * (1 - Math.pow(growth, level - 1)) / (1 - growth));
 }
 
 const LevelProgress: React.FC<LevelProgressProps> = ({
   currentLevel,
   currentPoints,
-  nextLevelPoints,
   className = ''
 }) => {
+  // Calculate cumulative points needed for current and next level
+  const currentLevelPoints = totalPointsForLevel(currentLevel, basePoints, growth);
+  const nextLevelPoints = totalPointsForLevel(currentLevel + 1, basePoints, growth);
   const pointsToNextLevel = nextLevelPoints - currentPoints;
-  const progressPercentage = (currentPoints / nextLevelPoints) * 100;
+  const progressPercentage = ((currentPoints - currentLevelPoints) / (nextLevelPoints - currentLevelPoints)) * 100;
 
   return (
     <div className={`bg-wamia-orange p-4 rounded-xl text-white ${className}`}>
