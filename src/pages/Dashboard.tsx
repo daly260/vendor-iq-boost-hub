@@ -123,8 +123,27 @@ const Dashboard = () => {
   const nextLevelPoints = (currentUser.level + 1) * 500;
   const levelProgress = Math.min(100, Math.round((currentUser.points / nextLevelPoints) * 100));
 
-  // Calculate total study time (sum durations of completed modules)
-  const completedModulesList = modules.filter(m => m.completed);
+  // Prioritize in-progress, then not-started, exclude completed
+  const modulesWithProgress = modules.map(m => {
+    const moduleProgresses = progress.filter(
+      pr => String(pr.moduleId) === String(m._id) || String(pr.moduleId) === String(m.id)
+    );
+    const p = moduleProgresses.length > 0
+      ? moduleProgresses.reduce((max, curr) => (curr.progress > max.progress ? curr : max), moduleProgresses[0])
+      : null;
+    return {
+      ...m,
+      completed: p ? p.progress >= 100 : false,
+      progress: p ? p.progress : 0,
+      completedAt: p ? p.completedAt : null
+    };
+  });
+
+  // Use modulesWithProgress for ALL summary calculations
+  const completedModulesList = modulesWithProgress.filter(m => m.completed);
+  const completedModules = completedModulesList.length;
+  const totalModules = modulesWithProgress.length;
+  const completionRate = totalModules > 0 ? (completedModules / totalModules) * 100 : 0;
   const totalStudyMinutes = completedModulesList.reduce((sum, m) => sum + (m.duration || 0), 0);
   const totalStudyHours = Math.floor(totalStudyMinutes / 60);
   const totalStudyMinutesRemainder = totalStudyMinutes % 60;
@@ -145,33 +164,10 @@ const Dashboard = () => {
   });
   const nextSession = upcomingSessions[0];
 
-  const completedModules = modules.filter(m => m.completed).length;
-  const totalModules = modules.length;
-  const completionRate = totalModules > 0 ? (completedModules / totalModules) * 100 : 0;
-
-  // Prioritize in-progress, then not-started, exclude completed
-  const modulesWithProgress = modules.map(m => {
-    const moduleProgresses = progress.filter(
-      pr => String(pr.moduleId) === String(m._id) || String(pr.moduleId) === String(m.id)
-    );
-    const p = moduleProgresses.length > 0
-      ? moduleProgresses.reduce((max, curr) => (curr.progress > max.progress ? curr : max), moduleProgresses[0])
-      : null;
-    return {
-      ...m,
-      completed: p ? p.progress >= 100 : false,
-      progress: p ? p.progress : 0,
-      completedAt: p ? p.completedAt : null
-    };
-  });
-  // Use modulesWithProgress for filtering and display
-  const inProgressModules = modulesWithProgress.filter(m => m.progress > 0 && m.progress < 100);
-  const notStartedModules = modulesWithProgress.filter(m => !m.progress || m.progress === 0);
-  const combined = [...inProgressModules, ...notStartedModules];
   // Deduplicate by module _id
   const seen = new Set();
   const recentModules = [];
-  for (const m of combined) {
+  for (const m of modulesWithProgress) {
     const id = String(m._id || m.id);
     if (!seen.has(id)) {
       seen.add(id);
@@ -254,7 +250,7 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-orange-100">Badges Débloqués</p>
-                <p className="text-2xl font-bold">{currentUser.badges.length}</p>
+                <p className="text-2xl font-bold">{(currentUser.badges && Array.isArray(currentUser.badges)) ? currentUser.badges.length : 0}</p>
               </div>
               <Trophy className="h-8 w-8 opacity-80" />
             </div>
