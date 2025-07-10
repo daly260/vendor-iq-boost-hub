@@ -8,6 +8,8 @@ const progressSchema = new mongoose.Schema({
   completedAt: Date,
   pointsClaimed: { type: Boolean, default: false },
   lastWatchedTime: { type: Number, default: 0 },
+  quizScore: { type: Number, default: 0 },
+  quizTime: { type: Number, default: 0 },
 }, { timestamps: true });
 
 module.exports = mongoose.models.Progress || mongoose.model('Progress', progressSchema);

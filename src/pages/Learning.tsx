@@ -687,9 +687,12 @@ const Learning = () => {
                       completedAt: new Date()
                     })
                   });
-                  // Refresh progress
-                  const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
-                  setProgressList(await res.json());
+                  // Refresh progress and close modal after a short delay
+                  setTimeout(async () => {
+                    const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
+                    setProgressList(await res.json());
+                    setQuizModalOpen(false);
+                  }, 1000);
                 } else {
                   setQuizResult('wrong');
                 }

@@ -10,8 +10,6 @@ const moduleSchema = new mongoose.Schema({
   difficulty: { type: String, enum: ['Débutant', 'Intermédiaire', 'Avancé'] },
   duration: Number,
   points: Number,
-  completed: { type: Boolean, default: false },
-  progress: { type: Number, default: 0 },
   thumbnail: String,
   downloadUrl: String,
   quizUrl: String,
