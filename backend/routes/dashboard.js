@@ -2,6 +2,7 @@ const express = require('express');
 const verifyToken = require('../middleware/verifyToken.js');
 const User = require('../models/User.js');
 const LiveSession = require('../models/LiveSession.js');
+const Module = require('../models/Module.js');
 
 const router = express.Router();
 
@@ -27,40 +28,15 @@ router.get('/user', verifyToken, async (req, res) => {
   }
 });
 
-// ✅ GET /modules — sample data
-router.get('/modules', verifyToken, (req, res) => {
-  res.json([
-    {
-      id: 'm1',
-      title: 'Introduction à la vente',
-      description: 'Les bases pour démarrer',
-      type: 'video',
-      points: 100,
-      duration: 15,
-      progress: 100,
-      completed: true
-    },
-    {
-      id: 'm2',
-      title: 'Techniques avancées',
-      description: 'Devenez un pro',
-      type: 'guide',
-      points: 200,
-      duration: 30,
-      progress: 60,
-      completed: false
-    },
-    {
-      id: 'm3',
-      title: 'Quiz sur la vente',
-      description: 'Testez vos connaissances',
-      type: 'quiz',
-      points: 150,
-      duration: 10,
-      progress: 30,
-      completed: false
-    }
-  ]);
+// ✅ GET /modules — dynamic
+router.get('/modules', verifyToken, async (req, res) => {
+  try {
+    const modules = await Module.find();
+    res.json(modules);
+  } catch (err) {
+    console.error('Error fetching modules:', err);
+    res.status(500).json({ error: 'Failed to fetch modules' });
+  }
 });
 
 // ✅ GET /live-sessions — dynamic

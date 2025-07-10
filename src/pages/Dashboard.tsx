@@ -85,13 +85,22 @@ const Dashboard = () => {
         ]);
         const modulesData = await modulesRes.json();
         const progressData = await progressRes.json();
+        // Debug logging
+        console.log('Modules:', modulesData);
+        console.log('Progress:', progressData);
         // Merge progress into modules
         const modulesWithProgress = modulesData.map(m => {
-          const p = progressData.find(pr => pr.moduleId === m._id || pr.moduleId === m.id);
+          const moduleProgresses = progressData.filter(
+            pr => String(pr.moduleId) === String(m._id) || String(pr.moduleId) === String(m.id)
+          );
+          const p = moduleProgresses.length > 0
+            ? moduleProgresses.reduce((max, curr) => (curr.progress > max.progress ? curr : max), moduleProgresses[0])
+            : null;
+          console.log('Module:', m.title, 'Progress:', p ? p.progress : 0, 'ModuleId:', m._id, 'ProgressModuleId:', p ? p.moduleId : 'none');
           return {
             ...m,
-            completed: !!p,
-            progress: p ? 100 : 0,
+            completed: p ? p.progress >= 100 : false,
+            progress: p ? p.progress : 0,
             completedAt: p ? p.completedAt : null
           };
         });
@@ -110,7 +119,6 @@ const Dashboard = () => {
     return <div className="p-6">Chargement...</div>;
   }
 
-  const recentModules = modules.slice(0, 3);
   // Calculate next level points and progress
   const nextLevelPoints = (currentUser.level + 1) * 500;
   const levelProgress = Math.min(100, Math.round((currentUser.points / nextLevelPoints) * 100));
@@ -140,6 +148,11 @@ const Dashboard = () => {
   const completedModules = modules.filter(m => m.completed).length;
   const totalModules = modules.length;
   const completionRate = totalModules > 0 ? (completedModules / totalModules) * 100 : 0;
+
+  // Prioritize in-progress, then not-started, exclude completed
+  const inProgressModules = modules.filter(m => m.progress > 0 && m.progress < 100);
+  const notStartedModules = modules.filter(m => !m.progress || m.progress === 0);
+  const recentModules = [...inProgressModules, ...notStartedModules].slice(0, 3);
 
   const getModuleIcon = (type: string) => {
     switch (type) {

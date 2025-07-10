@@ -323,14 +323,8 @@ app.get('/backend/dashboard/badges', async (req, res) => {
 app.get('/progress/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const progress = await Progress.find({ userId }).populate('moduleId');
-    const result = progress.map(p => ({
-      moduleId: p.moduleId._id,
-      title: p.moduleId.title,
-      points: p.moduleId.points,
-      completedAt: p.completedAt,
-    }));
-    res.json(result);
+    const progress = await Progress.find({ userId });
+    res.json(progress);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch progress' });
   }
