@@ -166,6 +166,10 @@ const Admin: React.FC = () => {
     instructor?: string;
     maxParticipants?: number | string;
     link?: string;
+    question?: string;
+    choices?: string[];
+    correctAnswer?: string;
+    relatedModuleId?: string;
     [key: string]: any;
   };
 
@@ -205,6 +209,7 @@ const Admin: React.FC = () => {
   const handleSubmit = async (type) => {
     let url = '';
     let body = {};
+    let method = 'POST';
     if (type === 'video') {
       url = '/backend/modules';
       body = {
@@ -229,8 +234,17 @@ const Admin: React.FC = () => {
         return;
       }
     } else if (type === 'quiz') {
-      url = '/modules';
-      body = { ...formData, type: 'quiz' };
+      if (formData._id || formData.id) {
+        // Editing existing quiz
+        url = `/modules/${formData._id || formData.id}`;
+        method = 'PUT';
+        body = { ...formData, type: 'quiz' };
+      } else {
+        // Creating new quiz
+        url = '/modules';
+        method = 'POST';
+        body = { ...formData, type: 'quiz' };
+      }
     } else if (type === 'session') {
       url = '/live-sessions';
       body = formData;
@@ -240,7 +254,7 @@ const Admin: React.FC = () => {
     }
     console.log('Submitting:', body);
     const res = await fetch(url, {
-      method: 'POST',
+      method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
@@ -500,10 +514,10 @@ const Admin: React.FC = () => {
             ) : (
               <div className="space-y-4">
                 {quizzes.map((quiz) => (
-                  <div key={quiz.id} className="p-4 rounded-lg border border-gray-300 bg-gray-50">
+                  <div key={quiz._id || quiz.id} className="p-4 rounded-lg border border-gray-300 bg-gray-50">
                     <h3 className="font-semibold text-lg">{quiz.title}</h3>
                     <p className="text-gray-700 dark:text-gray-300 mb-2">{quiz.description}</p>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 mb-2">
                       <span className="text-xs rounded-full bg-blue-100 text-blue-800 px-3 py-1">
                         Quiz
                       </span>
@@ -514,10 +528,29 @@ const Admin: React.FC = () => {
                     <div className="flex justify-between items-center mt-4">
                       <Button
                         size="sm"
-                        className="bg-gradient-rainbow hover:opacity-90 text-white"
-                        onClick={() => window.open(quiz.quizUrl, '_blank')}
+                        className="bg-gradient-rainbow hover:opacity-90 text-white mr-2"
+                        onClick={() => {
+                          setFormData({
+                            ...quiz,
+                            choices: Array.isArray(quiz.choices) ? quiz.choices.join(', ') : quiz.choices || '',
+                            relatedModuleId: quiz.relatedModuleId || ''
+                          });
+                          setShowAddQuiz(true);
+                        }}
                       >
-                        Passer le quiz
+                        Modifier
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={async () => {
+                          if (window.confirm('Voulez-vous vraiment supprimer ce quiz ?')) {
+                            await fetch(`/modules/${quiz._id || quiz.id}`, { method: 'DELETE' });
+                            setQuizzes(quizzes.filter(q => (q._id || q.id) !== (quiz._id || quiz.id)));
+                          }
+                        }}
+                      >
+                        Supprimer
                       </Button>
                     </div>
                   </div>
@@ -804,6 +837,7 @@ const Admin: React.FC = () => {
                 </label>
                 <input
                   name="title"
+                  value={formData.title || ''}
                   onChange={handleFormChange}
                   className="block w-full border border-gray-300 rounded-md p-2"
                   placeholder="Titre du quiz"
@@ -815,6 +849,7 @@ const Admin: React.FC = () => {
                 </label>
                 <textarea
                   name="description"
+                  value={formData.description || ''}
                   onChange={handleFormChange}
                   className="block w-full border border-gray-300 rounded-md p-2"
                   placeholder="Description du quiz"
@@ -823,13 +858,55 @@ const Admin: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  URL du quiz
+                  Module associé
                 </label>
-                <input
-                  name="quizUrl"
+                <select
+                  name="relatedModuleId"
+                  value={formData.relatedModuleId || ''}
                   onChange={handleFormChange}
                   className="block w-full border border-gray-300 rounded-md p-2"
-                  placeholder="https://exemple.com/mon-quiz"
+                  required
+                >
+                  <option value="">Sélectionner un module</option>
+                  {videos.map((mod) => (
+                    <option key={mod._id} value={mod._id}>{mod.title}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Question (QSM)
+                </label>
+                <input
+                  name="question"
+                  value={formData.question || ''}
+                  onChange={handleFormChange}
+                  className="block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Question du quiz"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Choix (séparés par des virgules)
+                </label>
+                <input
+                  name="choices"
+                  value={Array.isArray(formData.choices) ? formData.choices.join(', ') : (formData.choices || '')}
+                  onChange={e => setFormData({ ...formData, choices: e.target.value.split(',').map(s => s.trim()) })}
+                  className="block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="ex: Rouge, Bleu, Vert, Jaune"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Bonne réponse (doit correspondre à un des choix)
+                </label>
+                <input
+                  name="correctAnswer"
+                  value={formData.correctAnswer || ''}
+                  onChange={handleFormChange}
+                  className="block w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Bonne réponse"
                 />
               </div>
               <div>
@@ -839,6 +916,7 @@ const Admin: React.FC = () => {
                 <input
                   name="points"
                   type="number"
+                  value={formData.points || ''}
                   onChange={handleFormChange}
                   className="block w-full border border-gray-300 rounded-md p-2"
                   placeholder="Nombre de points"
@@ -850,7 +928,7 @@ const Admin: React.FC = () => {
                 onClick={() => handleSubmit('quiz')}
                 className="bg-gradient-rainbow hover:opacity-90 text-white"
               >
-                Ajouter le quiz
+                {formData._id || formData.id ? 'Modifier le quiz' : 'Ajouter le quiz'}
               </Button>
               <Button
                 onClick={handleClose}

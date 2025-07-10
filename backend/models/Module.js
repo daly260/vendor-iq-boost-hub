@@ -15,6 +15,10 @@ const moduleSchema = new mongoose.Schema({
   thumbnail: String,
   downloadUrl: String,
   quizUrl: String,
+  relatedModuleId: String,
+  question: String,
+  choices: [String],
+  correctAnswer: String,
 }, { timestamps: true });
 
 module.exports = mongoose.models.Module || mongoose.model('Module', moduleSchema);

@@ -5,6 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ProgressBar from '@/components/ProgressBar';
 import { useAuth } from '@/pages/AuthContext';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose
+} from '@/components/ui/dialog';
 
 // @ts-ignore
 declare global {
@@ -172,6 +181,19 @@ const Learning = () => {
   const [claimedModules, setClaimedModules] = useState([]);
   const userId = currentUser?._id;
   const [liveProgress, setLiveProgress] = useState({}); // { [moduleId]: percent }
+  const [quizModalOpen, setQuizModalOpen] = useState(false);
+  const [quizModule, setQuizModule] = useState(null);
+  const [quizAnswer, setQuizAnswer] = useState('');
+  const [quizResult, setQuizResult] = useState(null);
+
+  // Example quiz data (replace with real data or fetch from backend)
+  const quizData = {
+    QSM: {
+      question: "Quelle est la couleur du ciel ?",
+      choices: ["Rouge", "Bleu", "Vert", "Jaune"],
+      correct: "Bleu"
+    }
+  };
 
   const categories = ['all', 'Marketing', 'Logistique', 'Stratégie', 'Analytics'];
   const types = ['all', 'video', 'guide', 'quiz'];
@@ -194,7 +216,8 @@ const Learning = () => {
       .then(res => res.json())
       .then(data => {
         setProgressList(data);
-        console.log('ProgressList loaded:', data);
+        // Set claimedModules from backend progress
+        setClaimedModules(data.filter(p => p.pointsClaimed).map(p => p.moduleId));
       });
   }, [userId]);
 
@@ -359,171 +382,250 @@ const Learning = () => {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredModules.map((module) => (
-          <Card 
-            key={module._id} 
-            className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden"
-            onClick={() => handleModuleClick(module._id)}
-          >
-            {module.thumbnail && (
-              <div className="h-48 bg-cover bg-center relative overflow-hidden">
-                <img 
-                  src={module.thumbnail} 
-                  alt={module.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute top-4 right-4">
-                  <Badge className={getTypeColor(module.type)}>
-                    <div className="flex items-center space-x-1">
-                      {getModuleIcon(module.type)}
-                      <span className="capitalize">{module.type}</span>
+        {filteredModules.map((module) => {
+          if (module.type === 'quiz') {
+            // Find the related module's progress and title
+            const relatedModule = modules.find(m => String(m._id) === String(module.relatedModuleId));
+            const relatedProgress = progressList.find(p => String(p.moduleId) === String(module.relatedModuleId));
+            const relatedCompleted = relatedProgress && relatedProgress.progress >= 100;
+            const quizProgress = progressList.find(p => String(p.moduleId) === String(module._id));
+            const quizDone = quizProgress && quizProgress.quizScore === 100;
+            return (
+              <Card key={module._id} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden">
+                <CardContent className="p-6 flex flex-col items-center justify-center">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Brain className="h-6 w-6 text-vibrant-purple" />
+                    <span className="text-lg font-semibold">Quiz</span>
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2 text-center">{module.title}</h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 text-center">{module.description}</p>
+                  {Boolean(relatedModule) ? (
+                    <div className="text-xs text-gray-500 mb-2 text-center">
+                      Module requis : <span className="font-semibold">{relatedModule && relatedModule.title}</span>
                     </div>
-                  </Badge>
-                </div>
-                <div className="absolute bottom-4 left-4 text-white">
-                  <div className="flex items-center space-x-2">
-                    <Clock className="h-4 w-4" />
-                    <span className="text-sm">{module.duration}min</span>
+                  ) : (
+                    <div className="text-xs text-red-500 mb-2 text-center">
+                      Aucun module requis défini ou module introuvable
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-2 w-full items-center">
+                    <div className="relative w-full flex flex-col items-center">
+                      <Button
+                        size="sm"
+                        className="bg-vibrant-purple w-full"
+                        onClick={e => {
+                          e.stopPropagation();
+                          setQuizModule(module);
+                          setQuizModalOpen(true);
+                        }}
+                        disabled={!relatedCompleted || quizDone}
+                        onMouseEnter={e => {
+                          if (!relatedCompleted) {
+                            e.currentTarget.setAttribute('title', `Complétez d'abord le module requis : ${relatedModule ? relatedModule.title : ''}`);
+                          } else {
+                            e.currentTarget.removeAttribute('title');
+                          }
+                        }}
+                      >
+                        {quizDone ? 'Quiz Terminé' : 'Répondre au Quiz'}
+                      </Button>
+                      {!relatedCompleted && relatedModule && (
+                        <span className="text-xs text-red-500 mt-1">Complétez d'abord le module requis : <span className="font-semibold">{relatedModule.title}</span></span>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          }
+          return (
+            <Card 
+              key={module._id} 
+              className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden"
+              onClick={() => handleModuleClick(module._id)}
+            >
+              {module.thumbnail && (
+                <div className="h-48 bg-cover bg-center relative overflow-hidden">
+                  <img 
+                    src={module.thumbnail} 
+                    alt={module.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute top-4 right-4">
+                    <Badge className={getTypeColor(module.type)}>
+                      <div className="flex items-center space-x-1">
+                        {getModuleIcon(module.type)}
+                        <span className="capitalize">{module.type}</span>
+                      </div>
+                    </Badge>
+                  </div>
+                  <div className="absolute bottom-4 left-4 text-white">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="h-4 w-4" />
+                      <span className="text-sm">{module.duration}min</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-3">
-                <Badge className={getDifficultyColor(module.difficulty)}>
-                  {module.difficulty}
-                </Badge>
-                <div className="flex items-center space-x-1 text-vibrant-orange">
-                  <Star className="h-4 w-4" />
-                  <span className="font-semibold">{module.points}</span>
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-3">
+                  <Badge className={getDifficultyColor(module.difficulty)}>
+                    {module.difficulty}
+                  </Badge>
+                  <div className="flex items-center space-x-1 text-vibrant-orange">
+                    <Star className="h-4 w-4" />
+                    <span className="font-semibold">{module.points}</span>
+                  </div>
                 </div>
-              </div>
 
-              <h3 className="text-lg font-semibold mb-2 group-hover:text-vibrant-blue transition-colors">
-                {module.title}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-                {module.description}
-              </p>
+                <h3 className="text-lg font-semibold mb-2 group-hover:text-vibrant-blue transition-colors">
+                  {module.title}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+                  {module.description}
+                </p>
 
-              <div className="space-y-3">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-500">Progression</span>
-                  <span className="font-semibold">{getLiveOrSavedProgress(module._id)}%</span>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-500">Progression</span>
+                    <span className="font-semibold">{getLiveOrSavedProgress(module._id)}%</span>
+                  </div>
+                  <ProgressBar 
+                    progress={getLiveOrSavedProgress(module._id)}
+                    color={getVideoStatus(module._id) === 'completed' ? 'green' : 'blue'}
+                  />
                 </div>
-                <ProgressBar 
-                  progress={getLiveOrSavedProgress(module._id)}
-                  color={getVideoStatus(module._id) === 'completed' ? 'green' : 'blue'}
-                />
-              </div>
-              <div className="mt-4 flex justify-between items-center">
-                <Badge variant="outline" className="text-xs">
-                  {module.category}
-                </Badge>
-                <Button 
-                  size="sm" 
-                  className={`${getVideoStatus(module._id) === 'completed' ? 'bg-vibrant-green' : 'bg-gradient-rainbow'} hover:opacity-90`}
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    if (getVideoStatus(module._id) !== 'completed') {
-                      if (getVideoProgress(module._id) === 0) {
-                        await fetch('http://localhost:3001/backend/progress', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            userId,
-                            moduleId: module._id,
-                            status: 'in-progress',
-                            progress: 1,
-                            startedAt: new Date()
-                          })
-                        });
-                        const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
-                        setProgressList(await res.json());
+                <div className="mt-4 flex justify-between items-center">
+                  <Badge variant="outline" className="text-xs">
+                    {module.category}
+                  </Badge>
+                  <Button 
+                    size="sm" 
+                    className={`${getVideoStatus(module._id) === 'completed' ? 'bg-vibrant-green' : 'bg-gradient-rainbow'} hover:opacity-90`}
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (getVideoStatus(module._id) !== 'completed') {
+                        if (getVideoProgress(module._id) === 0) {
+                          await fetch('http://localhost:3001/backend/progress', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              userId,
+                              moduleId: module._id,
+                              status: 'in-progress',
+                              progress: 1,
+                              startedAt: new Date()
+                            })
+                          });
+                          const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
+                          setProgressList(await res.json());
+                        }
+                        if (module.videoUrl) {
+                          setCurrentVideoUrl(module.videoUrl);
+                          setCurrentModuleId(module._id);
+                          setPlayerModalOpen(true);
+                        } else if (module.link) {
+                          setCurrentVideoUrl(module.link);
+                          setCurrentModuleId(module._id);
+                          setPlayerModalOpen(true);
+                        }
                       }
-                      if (module.videoUrl) {
-                        setCurrentVideoUrl(module.videoUrl);
-                        setCurrentModuleId(module._id);
-                        setPlayerModalOpen(true);
-                      } else if (module.link) {
-                        setCurrentVideoUrl(module.link);
-                        setCurrentModuleId(module._id);
-                        setPlayerModalOpen(true);
-                      }
-                    }
-                  }}
-                  disabled={getVideoStatus(module._id) === 'completed'}
-                >
-                  {getVideoStatus(module._id) === 'completed' ? '✓ Terminé' :
-                   getVideoProgress(module._id) > 0 ? 'Continuer' : 'Commencer'}
-                </Button>
-              </div>
+                    }}
+                    disabled={getVideoStatus(module._id) === 'completed'}
+                  >
+                    {getVideoStatus(module._id) === 'completed' ? '✓ Terminé' :
+                     getVideoProgress(module._id) > 0 ? 'Continuer' : 'Commencer'}
+                  </Button>
+                </div>
 
-              {module.type === 'video' && (
-                <div className="mt-4">
-                  {Array.isArray(videos) && videos.map(video => (
-                    <div key={video._id} className="mb-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-semibold">{video.title}</span>
-                        <span className="text-xs text-gray-500">{video.duration} min</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="flex-1"
-                          onClick={() => {/* Open video in modal or new page */}}
-                        >
-                          <Play className="h-4 w-4 mr-2" />
-                          {getVideoProgress(video._id) === 100 ? 'Revoir' : 'Regarder'}
-                        </Button>
-                        <div className="text-xs text-gray-500">
-                          Progress: {getVideoProgress(video._id)}%
-                          {getVideoProgress(video._id) === 100 ? (
-                            <span className="text-green-500 ml-2">✔ Terminé</span>
-                          ) : (
-                            <button 
-                              onClick={() => markVideoComplete(video._id)} 
-                              className="text-vibrant-blue ml-2"
-                            >
-                              Marquer comme terminé
-                            </button>
-                          )}
+                {module.type === 'video' && (
+                  <div className="mt-4">
+                    {Array.isArray(videos) && videos.map(video => (
+                      <div key={video._id} className="mb-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-semibold">{video.title}</span>
+                          <span className="text-xs text-gray-500">{video.duration} min</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={() => {/* Open video in modal or new page */}}
+                          >
+                            <Play className="h-4 w-4 mr-2" />
+                            {getVideoProgress(video._id) === 100 ? 'Revoir' : 'Regarder'}
+                          </Button>
+                          <div className="text-xs text-gray-500">
+                            Progress: {getVideoProgress(video._id)}%
+                            {getVideoProgress(video._id) === 100 ? (
+                              <span className="text-green-500 ml-2">✔ Terminé</span>
+                            ) : (
+                              <button 
+                                onClick={() => markVideoComplete(video._id)} 
+                                className="text-vibrant-blue ml-2"
+                              >
+                                Marquer comme terminé
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
 
-              {getVideoStatus(module._id) === 'completed' && !claimedModules.includes(module._id) && (
-                <Button
-                  size="sm"
-                  className="bg-vibrant-green mt-2"
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    const res = await fetch('http://localhost:3001/backend/progress/claim-points', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ userId, moduleId: module._id })
-                    });
-                    if (res.ok) {
-                      setClaimedModules([...claimedModules, module._id]);
-                      alert('Points claimed!');
-                    } else {
-                      const data = await res.json();
-                      alert(data.error || 'Failed to claim points');
-                    }
-                  }}
-                >
-                  Réclamer les points
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+                {getVideoStatus(module._id) === 'completed' && (
+                  <div className="flex flex-col gap-2 mt-2">
+                    {/* Quiz button: only show if module has a quiz and is completed */}
+                    {(module.quizUrl || module.type === 'quiz') && (
+                      <Button
+                        size="sm"
+                        className="bg-vibrant-purple"
+                        onClick={e => {
+                          e.stopPropagation();
+                          setQuizModule(module);
+                          setQuizModalOpen(true);
+                        }}
+                        disabled={progressList.find(p => String(p.moduleId) === String(module._id) && p.quizScore === 100)}
+                      >
+                        {progressList.find(p => String(p.moduleId) === String(module._id) && p.quizScore === 100)
+                          ? 'Quiz Terminé'
+                          : 'Répondre au Quiz'}
+                      </Button>
+                    )}
+                    {/* Claim points button: only show if not already claimed */}
+                    {!claimedModules.includes(module._id) && (
+                      <Button
+                        size="sm"
+                        className="bg-vibrant-green"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const res = await fetch('http://localhost:3001/backend/progress/claim-points', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ userId, moduleId: module._id })
+                          });
+                          if (res.ok) {
+                            setClaimedModules([...claimedModules, module._id]);
+                            alert('Points claimed!');
+                          } else {
+                            const data = await res.json();
+                            alert(data.error || 'Failed to claim points');
+                          }
+                        }}
+                      >
+                        Réclamer les points
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {filteredModules.length === 0 && (
@@ -558,6 +660,75 @@ const Learning = () => {
           }
         }}
       />
+
+      <Dialog open={quizModalOpen} onOpenChange={setQuizModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Quiz QSM</DialogTitle>
+          </DialogHeader>
+          {quizModule && (
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const correct = quizModule.correctAnswer;
+                if (quizAnswer === correct) {
+                  setQuizResult('correct');
+                  // Mark quiz as done in backend
+                  await fetch('http://localhost:3001/backend/progress', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      userId,
+                      moduleId: quizModule._id,
+                      quizScore: 100,
+                      quizTime: 60, // Example, replace with real time
+                      progress: 100,
+                      status: 'completed',
+                      completedAt: new Date()
+                    })
+                  });
+                  // Refresh progress
+                  const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
+                  setProgressList(await res.json());
+                } else {
+                  setQuizResult('wrong');
+                }
+              }}
+            >
+              <div className="mb-4">
+                <div className="font-semibold mb-2">{quizModule.question}</div>
+                {(Array.isArray(quizModule.choices)
+                  ? quizModule.choices
+                  : (quizModule.choices || '').split(',').map(s => s.trim())
+                ).map(choice => (
+                  <label key={choice} className="block mb-1">
+                    <input
+                      type="radio"
+                      name="quiz"
+                      value={choice}
+                      checked={quizAnswer === choice}
+                      onChange={() => setQuizAnswer(choice)}
+                      className="mr-2"
+                      disabled={quizResult === 'correct'}
+                    />
+                    {choice}
+                  </label>
+                ))}
+              </div>
+              {quizResult === 'correct' && <div className="text-green-600 font-bold mb-2">Bonne réponse !</div>}
+              {quizResult === 'wrong' && <div className="text-red-600 font-bold mb-2">Mauvaise réponse, réessayez.</div>}
+              <DialogFooter>
+                <Button type="submit" disabled={quizResult === 'correct'}>
+                  Soumettre
+                </Button>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">Fermer</Button>
+                </DialogClose>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
