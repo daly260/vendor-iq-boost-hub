@@ -150,9 +150,35 @@ const Dashboard = () => {
   const completionRate = totalModules > 0 ? (completedModules / totalModules) * 100 : 0;
 
   // Prioritize in-progress, then not-started, exclude completed
-  const inProgressModules = modules.filter(m => m.progress > 0 && m.progress < 100);
-  const notStartedModules = modules.filter(m => !m.progress || m.progress === 0);
-  const recentModules = [...inProgressModules, ...notStartedModules].slice(0, 3);
+  const modulesWithProgress = modules.map(m => {
+    const moduleProgresses = progress.filter(
+      pr => String(pr.moduleId) === String(m._id) || String(pr.moduleId) === String(m.id)
+    );
+    const p = moduleProgresses.length > 0
+      ? moduleProgresses.reduce((max, curr) => (curr.progress > max.progress ? curr : max), moduleProgresses[0])
+      : null;
+    return {
+      ...m,
+      completed: p ? p.progress >= 100 : false,
+      progress: p ? p.progress : 0,
+      completedAt: p ? p.completedAt : null
+    };
+  });
+  // Use modulesWithProgress for filtering and display
+  const inProgressModules = modulesWithProgress.filter(m => m.progress > 0 && m.progress < 100);
+  const notStartedModules = modulesWithProgress.filter(m => !m.progress || m.progress === 0);
+  const combined = [...inProgressModules, ...notStartedModules];
+  // Deduplicate by module _id
+  const seen = new Set();
+  const recentModules = [];
+  for (const m of combined) {
+    const id = String(m._id || m.id);
+    if (!seen.has(id)) {
+      seen.add(id);
+      recentModules.push(m);
+    }
+    if (recentModules.length >= 3) break;
+  }
 
   const getModuleIcon = (type: string) => {
     switch (type) {
