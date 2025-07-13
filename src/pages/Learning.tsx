@@ -14,6 +14,7 @@ import {
   DialogFooter,
   DialogClose
 } from '@/components/ui/dialog';
+import { toast } from '@/hooks/use-toast';
 
 // @ts-ignore
 declare global {
@@ -23,7 +24,7 @@ declare global {
   }
 }
 
-const YouTubePlayerModal = ({ videoUrl, open, onClose, userId, moduleId, onProgressUpdate, lastWatchedTime }) => {
+const YouTubePlayerModal = ({ videoUrl, open, onClose, userId, moduleId, onProgressUpdate, lastWatchedTime, reviewMode = false }) => {
   const playerRef = useRef(null);
   const [player, setPlayer] = useState(null);
   const [lastSentProgress, setLastSentProgress] = useState(0);
@@ -56,6 +57,7 @@ const YouTubePlayerModal = ({ videoUrl, open, onClose, userId, moduleId, onProgr
               }
             },
             onStateChange: (event) => {
+              if (reviewMode) return; // Do nothing in review mode
               if (event.data === window.YT.PlayerState.PLAYING) {
                 if (!intervalRef.current) {
                   intervalRef.current = setInterval(async () => {
@@ -175,7 +177,7 @@ const Learning = () => {
   const [selectedDifficulty, setSelectedDifficulty] = useState('all');
   const [progressList, setProgressList] = useState([]);
   const [videos, setVideos] = useState([]);
-  const [playerModalOpen, setPlayerModalOpen] = useState(false);
+  const [playerModalOpen, setPlayerModalOpen] = useState({ open: false, reviewMode: false });
   const [currentVideoUrl, setCurrentVideoUrl] = useState("");
   const [currentModuleId, setCurrentModuleId] = useState("");
   const [claimedModules, setClaimedModules] = useState([]);
@@ -501,12 +503,25 @@ const Learning = () => {
                   <Badge variant="outline" className="text-xs">
                     {module.category}
                   </Badge>
-                  <Button 
-                    size="sm" 
-                    className={`${getVideoStatus(module._id) === 'completed' ? 'bg-vibrant-green' : 'bg-gradient-rainbow'} hover:opacity-90`}
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      if (getVideoStatus(module._id) !== 'completed') {
+                  {getVideoProgress(module._id) === 100 ? (
+                    <Button
+                      size="sm"
+                      className="bg-gradient-rainbow w-full hover:opacity-90"
+                      onClick={e => {
+                        e.stopPropagation();
+                        setCurrentVideoUrl(module.videoUrl);
+                        setCurrentModuleId(module._id);
+                        setPlayerModalOpen({ open: true, reviewMode: true });
+                      }}
+                    >
+                      Revoir
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="bg-gradient-rainbow w-full hover:opacity-90"
+                      onClick={async (e) => {
+                        e.stopPropagation();
                         if (getVideoProgress(module._id) === 0) {
                           await fetch('http://localhost:3001/backend/progress', {
                             method: 'POST',
@@ -522,22 +537,14 @@ const Learning = () => {
                           const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
                           setProgressList(await res.json());
                         }
-                        if (module.videoUrl) {
-                          setCurrentVideoUrl(module.videoUrl);
-                          setCurrentModuleId(module._id);
-                          setPlayerModalOpen(true);
-                        } else if (module.link) {
-                          setCurrentVideoUrl(module.link);
-                          setCurrentModuleId(module._id);
-                          setPlayerModalOpen(true);
-                        }
-                      }
-                    }}
-                    disabled={getVideoStatus(module._id) === 'completed'}
-                  >
-                    {getVideoStatus(module._id) === 'completed' ? '✓ Terminé' :
-                     getVideoProgress(module._id) > 0 ? 'Continuer' : 'Commencer'}
-                  </Button>
+                        setCurrentVideoUrl(module.videoUrl);
+                        setCurrentModuleId(module._id);
+                        setPlayerModalOpen({ open: true, reviewMode: false });
+                      }}
+                    >
+                      {getVideoProgress(module._id) > 0 ? 'Continuer' : 'Commencer'}
+                    </Button>
+                  )}
                 </div>
 
                 {module.type === 'video' && (
@@ -640,26 +647,29 @@ const Learning = () => {
         </div>
       )}
 
-      <YouTubePlayerModal
-        videoUrl={currentVideoUrl}
-        open={playerModalOpen}
-        onClose={() => setPlayerModalOpen(false)}
-        userId={userId}
-        moduleId={currentModuleId}
-        lastWatchedTime={(() => {
-          const progress = progressList.find(p => String(p.moduleId) === String(currentModuleId));
-          return progress ? progress.lastWatchedTime : 0;
-        })()}
-        onProgressUpdate={async (percent) => {
-          setLiveProgress(prev => ({ ...prev, [currentModuleId]: percent }));
-          if (percent === 100) {
-            // Refresh backend progress on completion
-            const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
-            setProgressList(await res.json());
-            setLiveProgress(prev => ({ ...prev, [currentModuleId]: undefined }));
-          }
-        }}
-      />
+      {playerModalOpen.open && (
+        <YouTubePlayerModal
+          videoUrl={currentVideoUrl}
+          open={playerModalOpen.open}
+          reviewMode={playerModalOpen.reviewMode}
+          onClose={() => setPlayerModalOpen({ open: false, reviewMode: false })}
+          userId={userId}
+          moduleId={currentModuleId}
+          lastWatchedTime={(() => {
+            const progress = progressList.find(p => String(p.moduleId) === String(currentModuleId));
+            return progress ? progress.lastWatchedTime : 0;
+          })()}
+          onProgressUpdate={async (percent) => {
+            setLiveProgress(prev => ({ ...prev, [currentModuleId]: percent }));
+            if (percent === 100) {
+              // Refresh backend progress on completion
+              const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
+              setProgressList(await res.json());
+              setLiveProgress(prev => ({ ...prev, [currentModuleId]: undefined }));
+            }
+          }}
+        />
+      )}
 
       <Dialog open={quizModalOpen} onOpenChange={setQuizModalOpen}>
         <DialogContent>
