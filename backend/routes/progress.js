@@ -123,9 +123,15 @@ router.post('/claim-points', async (req, res) => {
     const userDoc = await User.findById(userId);
     if (!userDoc) return res.status(404).json({ error: 'User not found.' });
     userDoc.points = (userDoc.points || 0) + (moduleDoc.points || 0);
-    const nextLevelPoints = (userDoc.level + 1) * 500;
-    if (userDoc.points >= nextLevelPoints) {
+    // Use geometric progression for next level points
+    function totalPointsForLevel(level, basePoints = 500, growth = 1.2) {
+      if (level <= 1) return 0;
+      return Math.round(basePoints * (1 - Math.pow(growth, level - 1)) / (1 - growth));
+    }
+    let leveledUp = false;
+    while (userDoc.points >= totalPointsForLevel(userDoc.level + 1)) {
       userDoc.level += 1;
+      leveledUp = true;
     }
     await userDoc.save();
     progress.pointsClaimed = true;

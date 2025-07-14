@@ -68,10 +68,15 @@ router.post('/modules/:id/complete', verifyToken, async (req, res) => {
     // Add points
     user.points += pointsToAdd;
 
-    // Level up
-    const nextLevelPoints = (user.level + 1) * 500;
-    if (user.points >= nextLevelPoints) {
+    // Use geometric progression for next level points
+    function totalPointsForLevel(level, basePoints = 500, growth = 1.2) {
+      if (level <= 1) return 0;
+      return Math.round(basePoints * (1 - Math.pow(growth, level - 1)) / (1 - growth));
+    }
+    let leveledUp = false;
+    while (user.points >= totalPointsForLevel(user.level + 1)) {
       user.level += 1;
+      leveledUp = true;
     }
 
     // Unlock badge (optional logic)
