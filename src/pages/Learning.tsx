@@ -446,7 +446,7 @@ const Learning = () => {
               className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden"
               onClick={() => handleModuleClick(module._id)}
             >
-              {module.thumbnail && (
+              {module.thumbnail ? (
                 <div className="h-48 bg-cover bg-center relative overflow-hidden">
                   <img 
                     src={module.thumbnail} 
@@ -468,6 +468,11 @@ const Learning = () => {
                       <span className="text-sm">{module.duration}min</span>
                     </div>
                   </div>
+                </div>
+              ) : (
+                <div className="h-48 w-full bg-gray-200 flex items-center justify-center text-gray-400 relative overflow-hidden">
+                  <BookOpen className="h-12 w-12" />
+                  <span className="absolute bottom-4 left-4 text-xs">No image</span>
                 </div>
               )}
 
