@@ -15,6 +15,7 @@ import {
   DialogClose
 } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 // @ts-ignore
 declare global {
@@ -187,6 +188,7 @@ const Learning = () => {
   const [quizModule, setQuizModule] = useState(null);
   const [quizAnswer, setQuizAnswer] = useState('');
   const [quizResult, setQuizResult] = useState(null);
+  const { toast } = useToast();
 
   // Example quiz data (replace with real data or fetch from backend)
   const quizData = {
@@ -622,10 +624,18 @@ const Learning = () => {
                           });
                           if (res.ok) {
                             setClaimedModules([...claimedModules, module._id]);
-                            alert('Points claimed!');
+                            toast({
+                              title: 'Points réclamés !',
+                              description: `Tu as gagné ${module.points || 0} points pour ce module.`,
+                              variant: 'default',
+                            });
                           } else {
                             const data = await res.json();
-                            alert(data.error || 'Failed to claim points');
+                            toast({
+                              title: 'Erreur',
+                              description: data.error || 'Impossible de réclamer les points',
+                              variant: 'destructive',
+                            });
                           }
                         }}
                       >
