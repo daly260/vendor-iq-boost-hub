@@ -346,7 +346,7 @@ const Admin: React.FC = () => {
     async function fetchStats() {
       setStatsLoading(true);
       try {
-        const res = await fetch('/progress/stats/learning-minutes');
+        const res = await fetch('http://localhost:3001/progress/stats/learning-minutes');
         const data = await res.json();
         setLearningStats(data);
       } catch (err) {

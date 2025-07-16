@@ -103,7 +103,7 @@ const LiveSession = mongoose.models.LiveSession || mongoose.model('LiveSession',
 app.use('/tickets', ticketRoutes);
 app.use('/backend', authRoutes);
 app.use('/backend/dashboard', dashboardRoutes); // ✅ New dashboard routes
-app.use('/backend/progress', progressRouter);
+app.use('/progress', progressRouter);
 app.use('/backend/modules', modulesRouter);
 
 // Tickets endpoints
