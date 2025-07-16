@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend, BarChart, Bar, AreaChart, Area } from 'recharts';
 
 const Admin: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -341,6 +341,7 @@ const Admin: React.FC = () => {
   const [learningStats, setLearningStats] = useState({ perDay: [], perWeek: [], perMonth: [] });
   const [statsLoading, setStatsLoading] = useState(true);
   const [period, setPeriod] = useState('perDay');
+  const [chartType, setChartType] = useState('line');
 
   useEffect(() => {
     async function fetchStats() {
@@ -357,6 +358,41 @@ const Admin: React.FC = () => {
     }
     fetchStats();
   }, []);
+
+  const formatXAxis = (tick) => {
+    if (period === 'perDay') {
+      // Format YYYY-MM-DD to DD/MM/YYYY
+      const [y, m, d] = tick.split('-');
+      return `${d}/${m}/${y}`;
+    } else if (period === 'perWeek') {
+      // Format 2025-W29 to 'DD-MM-YYYY  DD-MM-YYYY' (week range)
+      const [year, weekStr] = tick.split('-W');
+      const week = parseInt(weekStr, 10);
+      // Get the Monday of the ISO week
+      const simple = new Date(year, 0, 1 + (week - 1) * 7);
+      const dow = simple.getDay();
+      const monday = new Date(simple);
+      if (dow <= 4) {
+        // Mon-Thu: back up to Monday
+        monday.setDate(simple.getDate() - simple.getDay() + 1);
+      } else {
+        // Fri-Sun: forward to next Monday
+        monday.setDate(simple.getDate() + 8 - simple.getDay());
+      }
+      // Sunday of the week
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      const pad = (n) => n.toString().padStart(2, '0');
+      const format = (date) => `${pad(date.getDate())}-${pad(date.getMonth() + 1)}-${date.getFullYear()}`;
+      return `${format(monday)}  ${format(sunday)}`;
+    } else if (period === 'perMonth') {
+      // Format YYYY-MM to 'Mois YYYY'
+      const [y, m] = tick.split('-');
+      const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+      return `${months[parseInt(m, 10) - 1]} ${y}`;
+    }
+    return tick;
+  };
 
   if (loading) return <div>Chargement...</div>;
 
@@ -1387,25 +1423,52 @@ const Admin: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
-            <div className="my-8">
-              <h2 className="text-xl font-bold mb-4">Moyenne de minutes apprises</h2>
-              <select value={period} onChange={e => setPeriod(e.target.value)} className="mb-4">
-                <option value="perDay">Jour</option>
-                <option value="perWeek">Semaine</option>
-                <option value="perMonth">Mois</option>
-              </select>
+            <div className="my-8 bg-[#181A20] p-6 rounded-xl shadow-lg">
+              <h2 className="text-xl font-bold mb-4 text-white">Moyenne de minutes apprises</h2>
+              <div className="mb-4 flex gap-2">
+                <button onClick={() => setChartType('line')} className={`px-3 py-1 rounded ${chartType === 'line' ? 'bg-[#8884d8] text-white' : 'bg-[#222] text-gray-300'}`}>Line</button>
+                <button onClick={() => setChartType('bar')} className={`px-3 py-1 rounded ${chartType === 'bar' ? 'bg-[#8884d8] text-white' : 'bg-[#222] text-gray-300'}`}>Bar</button>
+                <button onClick={() => setChartType('area')} className={`px-3 py-1 rounded ${chartType === 'area' ? 'bg-[#8884d8] text-white' : 'bg-[#222] text-gray-300'}`}>Area</button>
+                <select value={period} onChange={e => setPeriod(e.target.value)} className="ml-4 bg-[#222] text-white px-2 py-1 rounded">
+                  <option value="perDay">Jour</option>
+                  <option value="perWeek">Semaine</option>
+                  <option value="perMonth">Mois</option>
+                </select>
+              </div>
               {statsLoading ? (
-                <div>Chargement du graphique...</div>
+                <div className="text-white">Chargement du graphique...</div>
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={learningStats[period]}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="period" />
-                    <YAxis label={{ value: "Minutes", angle: -90, position: "insideLeft" }} />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="average" name="Moyenne" stroke="#8884d8" />
-                  </LineChart>
+                  {chartType === 'line' && (
+                    <LineChart data={learningStats[period]}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                      <XAxis dataKey="period" stroke="#fff" tickFormatter={formatXAxis} />
+                      <YAxis label={{ value: "Minutes", angle: -90, position: "insideLeft", fill: "#fff" }} stroke="#fff" />
+                      <Tooltip contentStyle={{ background: "#222", border: "none" }} labelStyle={{ color: "#fff" }} labelFormatter={formatXAxis} />
+                      <Legend />
+                      <Line type="monotone" dataKey="average" name="Moyenne" stroke="#8884d8" strokeWidth={3} dot={{ r: 4 }} />
+                    </LineChart>
+                  )}
+                  {chartType === 'bar' && (
+                    <BarChart data={learningStats[period]}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                      <XAxis dataKey="period" stroke="#fff" tickFormatter={formatXAxis} />
+                      <YAxis label={{ value: "Minutes", angle: -90, position: "insideLeft", fill: "#fff" }} stroke="#fff" />
+                      <Tooltip contentStyle={{ background: "#222", border: "none" }} labelStyle={{ color: "#fff" }} labelFormatter={formatXAxis} />
+                      <Legend />
+                      <Bar dataKey="average" name="Moyenne" fill="#8884d8" />
+                    </BarChart>
+                  )}
+                  {chartType === 'area' && (
+                    <AreaChart data={learningStats[period]}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                      <XAxis dataKey="period" stroke="#fff" tickFormatter={formatXAxis} />
+                      <YAxis label={{ value: "Minutes", angle: -90, position: "insideLeft", fill: "#fff" }} stroke="#fff" />
+                      <Tooltip contentStyle={{ background: "#222", border: "none" }} labelStyle={{ color: "#fff" }} labelFormatter={formatXAxis} />
+                      <Legend />
+                      <Area type="monotone" dataKey="average" name="Moyenne" stroke="#8884d8" fill="#8884d8" fillOpacity={0.3} />
+                    </AreaChart>
+                  )}
                 </ResponsiveContainer>
               )}
             </div>
