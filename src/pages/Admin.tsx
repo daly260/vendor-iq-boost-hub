@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Users, Video, HelpCircle, TicketIcon, BarChart3, Play, Edit, Trash2
+  Users, Video, HelpCircle, TicketIcon, BarChart3, Play, Edit, Trash2, Calendar, BookOpen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
 
 const Admin: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -25,12 +26,12 @@ const Admin: React.FC = () => {
   const [editVideo, setEditVideo] = useState(null);
 
   const tabs = [
-    { id: 'dashboard', label: '📊 Tableau de bord', icon: BarChart3 },
-    { id: 'videos', label: '📹 Vidéos', icon: Video },
-    { id: 'quiz', label: '❓ Quiz', icon: HelpCircle },
-    { id: 'users', label: '👥 Vendeurs', icon: Users },
-    { id: 'tickets', label: '🎫 Tickets', icon: TicketIcon },
-    { id: 'live', label: '📺 Sessions Live', icon: Play },
+    { id: 'dashboard', label: ' Tableau de bord', icon: BarChart3 },
+    { id: 'videos', label: ' Vidéos', icon: Video },
+    { id: 'quiz', label: ' Quiz', icon: HelpCircle },
+    { id: 'users', label: ' Vendeurs', icon: Users },
+    { id: 'tickets', label: ' Tickets', icon: TicketIcon },
+    { id: 'live', label: ' Sessions Live', icon: Play },
   ];
 
   useEffect(() => {
@@ -70,6 +71,7 @@ const Admin: React.FC = () => {
 
   // Tickets logic
   const [tickets, setTickets] = useState<any[]>([]);
+  const [openTicketCount, setOpenTicketCount] = useState(0);
   const [loadingTickets, setLoadingTickets] = useState(false);
 
   useEffect(() => {
@@ -77,6 +79,27 @@ const Admin: React.FC = () => {
       fetchTickets();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    async function fetchTickets() {
+      try {
+        const res = await fetch('http://localhost:3001/tickets');
+        const data = await res.json();
+        // Map MongoDB _id to id for React keys and requests
+        const ticketsWithId = data.map((t: any) => ({ ...t, id: t._id }));
+        setTickets(ticketsWithId);
+        const newCount = ticketsWithId.filter((t) => t.status === 'open').length;
+        setNewTicketCount(newCount);
+        setOpenTicketCount(ticketsWithId.filter(t => t.status === 'open').length);
+      } catch (err) {
+        console.error(err);
+        toast({ title: 'Erreur', description: 'Impossible de charger les tickets', variant: 'destructive' });
+      } finally {
+        setLoadingTickets(false);
+      }
+    }
+    fetchTickets();
+  }, []);
 
   const fetchTickets = async () => {
     setLoadingTickets(true);
@@ -313,6 +336,27 @@ const Admin: React.FC = () => {
 
   // Add state for editing video
   const [editVideoState, setEditVideoState] = useState(null);
+
+  // Add state for learning stats and period selector
+  const [learningStats, setLearningStats] = useState({ perDay: [], perWeek: [], perMonth: [] });
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [period, setPeriod] = useState('perDay');
+
+  useEffect(() => {
+    async function fetchStats() {
+      setStatsLoading(true);
+      try {
+        const res = await fetch('/progress/stats/learning-minutes');
+        const data = await res.json();
+        setLearningStats(data);
+      } catch (err) {
+        setLearningStats({ perDay: [], perWeek: [], perMonth: [] });
+      } finally {
+        setStatsLoading(false);
+      }
+    }
+    fetchStats();
+  }, []);
 
   if (loading) return <div>Chargement...</div>;
 
@@ -1297,9 +1341,80 @@ const Admin: React.FC = () => {
       )}
 
       {activeTab !== 'tickets' && (
-        <div className="text-center text-gray-500 dark:text-gray-400 mt-20">
-          <p>Contenu pour l'onglet "{activeTab}" sera bientôt disponible.</p>
-        </div>
+        activeTab === 'dashboard' ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Utilisateurs</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{users.length}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Modules Vidéo</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{videos.length}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quiz</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{quizzes.length}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Sessions Live</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{liveSessions.length}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Tickets</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{tickets.length}</div>
+                  <div className="text-sm text-gray-500">Total</div>
+                  <div className="text-lg text-blue-600">{openTicketCount} ouverts</div>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="my-8">
+              <h2 className="text-xl font-bold mb-4">Moyenne de minutes apprises</h2>
+              <select value={period} onChange={e => setPeriod(e.target.value)} className="mb-4">
+                <option value="perDay">Jour</option>
+                <option value="perWeek">Semaine</option>
+                <option value="perMonth">Mois</option>
+              </select>
+              {statsLoading ? (
+                <div>Chargement du graphique...</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={learningStats[period]}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="period" />
+                    <YAxis label={{ value: "Minutes", angle: -90, position: "insideLeft" }} />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="average" name="Moyenne" stroke="#8884d8" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="text-center text-gray-500 dark:text-gray-400 mt-20">
+            <p>Contenu pour l'onglet "{activeTab}" sera bientôt disponible.</p>
+          </div>
+        )
       )}
     </div>
   );

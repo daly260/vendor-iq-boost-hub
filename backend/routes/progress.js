@@ -144,4 +144,61 @@ router.post('/claim-points', async (req, res) => {
   }
 });
 
+// GET /stats/learning-minutes — average minutes watched per day, week, month
+router.get('/stats/learning-minutes', async (req, res) => {
+  try {
+    // Aggregate total minutes watched per user per progress record
+    // Assume lastWatchedTime is in seconds, convert to minutes
+    const pipeline = [
+      {
+        $project: {
+          userId: 1,
+          minutesWatched: { $divide: ["$lastWatchedTime", 60] },
+          createdAt: 1
+        }
+      }
+    ];
+    const all = await Progress.aggregate(pipeline);
+
+    // Helper to group by period
+    function groupByPeriod(data, getPeriod) {
+      const map = {};
+      data.forEach(item => {
+        const period = getPeriod(item.createdAt);
+        if (!map[period]) map[period] = { total: 0, users: new Set() };
+        map[period].total += item.minutesWatched;
+        map[period].users.add(item.userId);
+      });
+      // Compute average per user for each period
+      return Object.entries(map).map(([period, { total, users }]) => ({
+        period,
+        average: users.size > 0 ? total / users.size : 0
+      })).sort((a, b) => a.period.localeCompare(b.period));
+    }
+
+    // Per day
+    const perDay = groupByPeriod(all, d => new Date(d).toISOString().slice(0, 10));
+    // Per week (ISO week)
+    function getISOWeek(date) {
+      const d = new Date(date);
+      d.setHours(0,0,0,0);
+      d.setDate(d.getDate() + 4 - (d.getDay()||7));
+      const yearStart = new Date(d.getFullYear(),0,1);
+      const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+      return `${d.getFullYear()}-W${weekNo.toString().padStart(2, '0')}`;
+    }
+    const perWeek = groupByPeriod(all, d => getISOWeek(d));
+    // Per month
+    const perMonth = groupByPeriod(all, d => new Date(d).toISOString().slice(0, 7));
+
+    res.json({
+      perDay,
+      perWeek,
+      perMonth
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to aggregate learning stats' });
+  }
+});
+
 module.exports = router;

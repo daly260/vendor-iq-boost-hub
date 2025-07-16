@@ -29,15 +29,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
 
   const navigation = [
-    { name: "🏠 Tableau de bord", href: "/", icon: Home },
-    { name: "📚 Formation", href: "/learning", icon: BookOpen },
-    { name: "🏆 Classement", href: "/leaderboard", icon: Trophy },
-    { name: "🎫 Support", href: "/tickets", icon: TicketIcon },
-    { name: "📺 Sessions Live", href: "/live-sessions", icon: Users }
+    { name: " Tableau de bord", href: "/", icon: Home },
+    { name: " Formation", href: "/learning", icon: BookOpen },
+    { name: " Classement", href: "/leaderboard", icon: Trophy },
+    { name: " Support", href: "/tickets", icon: TicketIcon },
+    { name: " Sessions Live", href: "/live-sessions", icon: Users }
   ];
 
   const adminNavigation = [
-    { name: "⚙️ Administration", href: "/admin", icon: Settings }
+    { name: " Administration", href: "/admin", icon: Settings }
   ];
 
   const toggleDarkMode = () => {
@@ -62,7 +62,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <span className="text-white font-bold font-title">W</span>
               </div>
               <h1 className="text-xl font-title bg-gradient-wamia bg-clip-text text-transparent">
-                Wamia Formation
+                Wamia Academy
               </h1>
             </div>
             <Button
