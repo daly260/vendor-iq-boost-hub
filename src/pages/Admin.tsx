@@ -394,37 +394,42 @@ const Admin: React.FC = () => {
     return tick;
   };
 
+  const primaryColor = "#2563eb"; // blue-600
+  const secondaryColor = "#f59e42"; // wamia-orange
+  const gridColor = "#374151"; // gray-700
+  const areaFill = "#2563eb33"; // blue with opacity
+
   if (loading) return <div>Chargement...</div>;
 
   let chartElement;
   if (chartType === 'line') chartElement = (
     <LineChart data={learningStats[period]}>
-      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+      <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
       <XAxis dataKey="period" stroke="#fff" tickFormatter={formatXAxis} />
       <YAxis label={{ value: "Minutes", angle: -90, position: "insideLeft", fill: "#fff" }} stroke="#fff" />
       <Tooltip contentStyle={{ background: "#222", border: "none" }} labelStyle={{ color: "#fff" }} labelFormatter={formatXAxis} />
-      <Legend />
-      <Line type="monotone" dataKey="average" name="Moyenne" stroke="#8884d8" strokeWidth={3} dot={{ r: 4 }} />
+      <Legend wrapperStyle={{ color: "#fff" }} />
+      <Line type="monotone" dataKey="average" name="Moyenne" stroke={primaryColor} strokeWidth={3} dot={{ r: 5, fill: secondaryColor, stroke: primaryColor, strokeWidth: 2 }} />
     </LineChart>
   );
   else if (chartType === 'bar') chartElement = (
     <BarChart data={learningStats[period]}>
-      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+      <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
       <XAxis dataKey="period" stroke="#fff" tickFormatter={formatXAxis} />
       <YAxis label={{ value: "Minutes", angle: -90, position: "insideLeft", fill: "#fff" }} stroke="#fff" />
       <Tooltip contentStyle={{ background: "#222", border: "none" }} labelStyle={{ color: "#fff" }} labelFormatter={formatXAxis} />
-      <Legend />
-      <Bar dataKey="average" name="Moyenne" fill="#8884d8" />
+      <Legend wrapperStyle={{ color: "#fff" }} />
+      <Bar dataKey="average" name="Moyenne" fill={primaryColor} />
     </BarChart>
   );
   else chartElement = (
     <AreaChart data={learningStats[period]}>
-      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+      <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
       <XAxis dataKey="period" stroke="#fff" tickFormatter={formatXAxis} />
       <YAxis label={{ value: "Minutes", angle: -90, position: "insideLeft", fill: "#fff" }} stroke="#fff" />
       <Tooltip contentStyle={{ background: "#222", border: "none" }} labelStyle={{ color: "#fff" }} labelFormatter={formatXAxis} />
-      <Legend />
-      <Area type="monotone" dataKey="average" name="Moyenne" stroke="#8884d8" fill="#8884d8" fillOpacity={0.3} />
+      <Legend wrapperStyle={{ color: "#fff" }} />
+      <Area type="monotone" dataKey="average" name="Moyenne" stroke={primaryColor} fill={areaFill} fillOpacity={0.5} />
     </AreaChart>
   );
 
@@ -1412,46 +1417,56 @@ const Admin: React.FC = () => {
         activeTab === 'dashboard' ? (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Utilisateurs</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{users.length}</div>
+              <Card className="flex flex-col justify-center items-center h-40">
+                <CardContent className="flex flex-col justify-center items-center h-full w-full p-4">
+                  <div className="text-base font-semibold text-gray-700 mb-2 text-center truncate w-full">
+                    Utilisateurs
+                  </div>
+                  <div className="text-5xl font-extrabold text-gray-900 text-center">
+                    {users.length}
+                  </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Modules Vidéo</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{videos.length}</div>
+              <Card className="flex flex-col justify-center items-center h-40">
+                <CardContent className="flex flex-col justify-center items-center h-full w-full p-4">
+                  <div className="text-base font-semibold text-gray-700 mb-2 text-center truncate w-full">
+                    Modules Vidéo
+                  </div>
+                  <div className="text-5xl font-extrabold text-gray-900 text-center">
+                    {videos.length}
+                  </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quiz</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{quizzes.length}</div>
+              <Card className="flex flex-col justify-center items-center h-40">
+                <CardContent className="flex flex-col justify-center items-center h-full w-full p-4">
+                  <div className="text-base font-semibold text-gray-700 mb-2 text-center truncate w-full">
+                    Quiz
+                  </div>
+                  <div className="text-5xl font-extrabold text-gray-900 text-center">
+                    {quizzes.length}
+                  </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Sessions Live</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{liveSessions.length}</div>
+              <Card className="flex flex-col justify-center items-center h-40">
+                <CardContent className="flex flex-col justify-center items-center h-full w-full p-4">
+                  <div className="text-base font-semibold text-gray-700 mb-2 text-center truncate w-full">
+                    Sessions Live
+                  </div>
+                  <div className="text-5xl font-extrabold text-gray-900 text-center">
+                    {liveSessions.length}
+                  </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tickets</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{tickets.length}</div>
-                  <div className="text-sm text-gray-500">Total</div>
-                  <div className="text-lg text-blue-600">{openTicketCount} ouverts</div>
+              <Card className="flex flex-col justify-center items-center h-40">
+                <CardContent className="flex flex-col justify-center items-center h-full w-full p-4">
+                  <div className="text-base font-semibold text-gray-700 mb-2 text-center truncate w-full">
+                    Tickets
+                  </div>
+                  <div className="text-5xl font-extrabold text-gray-900 text-center">
+                    {tickets.length}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">Total</div>
+                  <div className="text-sm text-blue-600">{openTicketCount} ouverts</div>
                 </CardContent>
               </Card>
             </div>

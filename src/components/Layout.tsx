@@ -77,12 +77,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           <div className="px-6 py-4">
             {user && (
-              <div className="flex items-center space-x-3 p-3 bg-gradient-wamia rounded-xl text-white">
-                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-bold uppercase">
-                  {user?.email?.[0]?.toUpperCase() || "?"}
-                </div>
-                <div>
-                  <p className="font-semibold font-body">{user?.name || user?.email || "Utilisateur"}</p>
+              <div className="p-3 bg-gradient-wamia rounded-xl text-white">
+                <div className="flex flex-col justify-center">
+                  <p className="font-semibold font-body leading-tight">{user?.email || user?.name || "Utilisateur"}</p>
                   <p className="text-sm opacity-90 capitalize">{user?.role || "user"}</p>
                 </div>
               </div>
