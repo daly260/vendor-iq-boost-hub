@@ -394,10 +394,11 @@ const Admin: React.FC = () => {
     return tick;
   };
 
-  const primaryColor = "#2563eb"; // blue-600
-  const secondaryColor = "#f59e42"; // wamia-orange
-  const gridColor = "#374151"; // gray-700
-  const areaFill = "#2563eb33"; // blue with opacity
+  const primaryColor = "#a78bfa"; // violet-400
+  const accentColor = "#f43f5e"; // rose-500
+  const dotColor = "#f59e42"; // orange-400
+  const gridColor = "#6b7280"; // gray-500
+  const areaFill = "#a78bfa33"; // soft violet with opacity
 
   if (loading) return <div>Chargement...</div>;
 
@@ -409,7 +410,7 @@ const Admin: React.FC = () => {
       <YAxis label={{ value: "Minutes", angle: -90, position: "insideLeft", fill: "#fff" }} stroke="#fff" />
       <Tooltip contentStyle={{ background: "#222", border: "none" }} labelStyle={{ color: "#fff" }} labelFormatter={formatXAxis} />
       <Legend wrapperStyle={{ color: "#fff" }} />
-      <Line type="monotone" dataKey="average" name="Moyenne" stroke={primaryColor} strokeWidth={3} dot={{ r: 5, fill: secondaryColor, stroke: primaryColor, strokeWidth: 2 }} />
+      <Line type="monotone" dataKey="average" name="Moyenne" stroke={primaryColor} strokeWidth={3} dot={{ r: 6, fill: dotColor, stroke: accentColor, strokeWidth: 2 }} />
     </LineChart>
   );
   else if (chartType === 'bar') chartElement = (
@@ -429,7 +430,7 @@ const Admin: React.FC = () => {
       <YAxis label={{ value: "Minutes", angle: -90, position: "insideLeft", fill: "#fff" }} stroke="#fff" />
       <Tooltip contentStyle={{ background: "#222", border: "none" }} labelStyle={{ color: "#fff" }} labelFormatter={formatXAxis} />
       <Legend wrapperStyle={{ color: "#fff" }} />
-      <Area type="monotone" dataKey="average" name="Moyenne" stroke={primaryColor} fill={areaFill} fillOpacity={0.5} />
+      <Area type="monotone" dataKey="average" name="Moyenne" stroke={primaryColor} fill={areaFill} fillOpacity={0.7} />
     </AreaChart>
   );
 
@@ -1470,25 +1471,27 @@ const Admin: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
-            <div className="my-8 bg-[#181A20] p-6 rounded-xl shadow-lg">
-              <h2 className="text-xl font-bold mb-4 text-white">Moyenne de minutes apprises</h2>
-              <div className="mb-4 flex gap-2">
-                <button onClick={() => setChartType('line')} className={`px-3 py-1 rounded ${chartType === 'line' ? 'bg-[#8884d8] text-white' : 'bg-[#222] text-gray-300'}`}>Line</button>
-                <button onClick={() => setChartType('bar')} className={`px-3 py-1 rounded ${chartType === 'bar' ? 'bg-[#8884d8] text-white' : 'bg-[#222] text-gray-300'}`}>Bar</button>
-                <button onClick={() => setChartType('area')} className={`px-3 py-1 rounded ${chartType === 'area' ? 'bg-[#8884d8] text-white' : 'bg-[#222] text-gray-300'}`}>Area</button>
-                <select value={period} onChange={e => setPeriod(e.target.value)} className="ml-4 bg-[#222] text-white px-2 py-1 rounded">
+            <div className="my-8 p-0 rounded-xl shadow-lg" style={{ background: "linear-gradient(135deg, #f8fafc 0%, #f59e42 100%)" }}>
+              <h2 className="text-xl font-bold mb-4 text-gray-900 p-6 pb-0">Moyenne de minutes apprises</h2>
+              <div className="mb-4 flex gap-2 p-6 pt-2">
+                <button onClick={() => setChartType('line')} className={`px-3 py-1 rounded ${chartType === 'line' ? 'bg-[#a21caf] text-white' : 'bg-[#f3e8ff] text-[#a21caf]'}`}>Line</button>
+                <button onClick={() => setChartType('bar')} className={`px-3 py-1 rounded ${chartType === 'bar' ? 'bg-[#a21caf] text-white' : 'bg-[#f3e8ff] text-[#a21caf]'}`}>Bar</button>
+                <button onClick={() => setChartType('area')} className={`px-3 py-1 rounded ${chartType === 'area' ? 'bg-[#a21caf] text-white' : 'bg-[#f3e8ff] text-[#a21caf]'}`}>Area</button>
+                <select value={period} onChange={e => setPeriod(e.target.value)} className="ml-4 bg-[#f3e8ff] text-[#a21caf] px-2 py-1 rounded">
                   <option value="perDay">Jour</option>
                   <option value="perWeek">Semaine</option>
                   <option value="perMonth">Mois</option>
                 </select>
               </div>
-              {statsLoading ? (
-                <div className="text-white">Chargement du graphique...</div>
-              ) : (
-                <ResponsiveContainer width="100%" height={300}>
-                  {chartElement}
-                </ResponsiveContainer>
-              )}
+              <div style={{ padding: "0 1.5rem 1.5rem 1.5rem" }}>
+                {statsLoading ? (
+                  <div className="text-gray-900">Chargement du graphique...</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    {chartElement}
+                  </ResponsiveContainer>
+                )}
+              </div>
             </div>
           </>
         ) : (
