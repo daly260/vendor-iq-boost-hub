@@ -216,7 +216,7 @@ const Learning = () => {
 
   useEffect(() => {
     if (!userId) return;
-    fetch(`http://localhost:3001/backend/progress/${userId}`)
+    fetch(`http://localhost:3001/progress/${userId}`)
       .then(res => res.json())
       .then(data => {
         setProgressList(data);
@@ -282,7 +282,7 @@ const Learning = () => {
   }
 
   async function markVideoComplete(moduleId) {
-    await fetch('http://localhost:3001/backend/progress', {
+    await fetch('http://localhost:3001/progress', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -294,7 +294,7 @@ const Learning = () => {
       })
     });
     // Refresh progress
-    const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
+    const res = await fetch(`http://localhost:3001/progress/${userId}`);
     setProgressList(await res.json());
   }
 
@@ -530,7 +530,7 @@ const Learning = () => {
                       onClick={async (e) => {
                         e.stopPropagation();
                         if (getVideoProgress(module._id) === 0) {
-                          await fetch('http://localhost:3001/backend/progress', {
+                          await fetch('http://localhost:3001/progress', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -541,7 +541,7 @@ const Learning = () => {
                               startedAt: new Date()
                             })
                           });
-                          const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
+                          const res = await fetch(`http://localhost:3001/progress/${userId}`);
                           setProgressList(await res.json());
                         }
                         setCurrentVideoUrl(module.videoUrl);
@@ -617,7 +617,7 @@ const Learning = () => {
                         className="bg-vibrant-green"
                         onClick={async (e) => {
                           e.stopPropagation();
-                          const res = await fetch('http://localhost:3001/backend/progress/claim-points', {
+                          const res = await fetch('http://localhost:3001/progress/claim-points', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ userId, moduleId: module._id })
@@ -678,7 +678,7 @@ const Learning = () => {
             setLiveProgress(prev => ({ ...prev, [currentModuleId]: percent }));
             if (percent === 100) {
               // Refresh backend progress on completion
-              const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
+              const res = await fetch(`http://localhost:3001/progress/${userId}`);
               setProgressList(await res.json());
               setLiveProgress(prev => ({ ...prev, [currentModuleId]: undefined }));
             }
@@ -714,7 +714,7 @@ const Learning = () => {
                   });
                   // Refresh progress and close modal after a short delay
                   setTimeout(async () => {
-                    const res = await fetch(`http://localhost:3001/backend/progress/${userId}`);
+                    const res = await fetch(`http://localhost:3001/progress/${userId}`);
                     setProgressList(await res.json());
                     setQuizModalOpen(false);
                   }, 1000);

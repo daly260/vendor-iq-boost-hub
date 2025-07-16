@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   BookOpen, Trophy, TrendingUp, Clock, Users, Star,
   Play, Download, Brain, Calendar, Zap
@@ -13,6 +13,7 @@ import { useAuth } from '@/pages/AuthContext';
 
 const Dashboard = () => {
   const { token } = useAuth();
+  const navigate = useNavigate();
 
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [modules, setModules] = useState<any[]>([]);
@@ -60,6 +61,7 @@ const Dashboard = () => {
     };
 
     async function fetchProgress() {
+      if (!userId) return;
       try {
         const response = await fetch(`/backend/progress/${userId}`);
         const data = await response.json();
@@ -291,7 +293,11 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {recentModules.map((module) => (
-                <div key={module._id || module.id} className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+                <div
+                  key={module._id || module.id}
+                  className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                  onClick={() => navigate('/learning')}
+                >
                   <div className={`p-2 rounded-lg bg-white shadow-sm ${getModuleColor(module.type)}`}>
                     {getModuleIcon(module.type)}
                   </div>

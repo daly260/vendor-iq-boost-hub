@@ -396,6 +396,38 @@ const Admin: React.FC = () => {
 
   if (loading) return <div>Chargement...</div>;
 
+  let chartElement;
+  if (chartType === 'line') chartElement = (
+    <LineChart data={learningStats[period]}>
+      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+      <XAxis dataKey="period" stroke="#fff" tickFormatter={formatXAxis} />
+      <YAxis label={{ value: "Minutes", angle: -90, position: "insideLeft", fill: "#fff" }} stroke="#fff" />
+      <Tooltip contentStyle={{ background: "#222", border: "none" }} labelStyle={{ color: "#fff" }} labelFormatter={formatXAxis} />
+      <Legend />
+      <Line type="monotone" dataKey="average" name="Moyenne" stroke="#8884d8" strokeWidth={3} dot={{ r: 4 }} />
+    </LineChart>
+  );
+  else if (chartType === 'bar') chartElement = (
+    <BarChart data={learningStats[period]}>
+      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+      <XAxis dataKey="period" stroke="#fff" tickFormatter={formatXAxis} />
+      <YAxis label={{ value: "Minutes", angle: -90, position: "insideLeft", fill: "#fff" }} stroke="#fff" />
+      <Tooltip contentStyle={{ background: "#222", border: "none" }} labelStyle={{ color: "#fff" }} labelFormatter={formatXAxis} />
+      <Legend />
+      <Bar dataKey="average" name="Moyenne" fill="#8884d8" />
+    </BarChart>
+  );
+  else chartElement = (
+    <AreaChart data={learningStats[period]}>
+      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+      <XAxis dataKey="period" stroke="#fff" tickFormatter={formatXAxis} />
+      <YAxis label={{ value: "Minutes", angle: -90, position: "insideLeft", fill: "#fff" }} stroke="#fff" />
+      <Tooltip contentStyle={{ background: "#222", border: "none" }} labelStyle={{ color: "#fff" }} labelFormatter={formatXAxis} />
+      <Legend />
+      <Area type="monotone" dataKey="average" name="Moyenne" stroke="#8884d8" fill="#8884d8" fillOpacity={0.3} />
+    </AreaChart>
+  );
+
   return (
     <div className="p-6 space-y-6">
       {/* Tab Navigation */}
@@ -1439,36 +1471,7 @@ const Admin: React.FC = () => {
                 <div className="text-white">Chargement du graphique...</div>
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
-                  {chartType === 'line' && (
-                    <LineChart data={learningStats[period]}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                      <XAxis dataKey="period" stroke="#fff" tickFormatter={formatXAxis} />
-                      <YAxis label={{ value: "Minutes", angle: -90, position: "insideLeft", fill: "#fff" }} stroke="#fff" />
-                      <Tooltip contentStyle={{ background: "#222", border: "none" }} labelStyle={{ color: "#fff" }} labelFormatter={formatXAxis} />
-                      <Legend />
-                      <Line type="monotone" dataKey="average" name="Moyenne" stroke="#8884d8" strokeWidth={3} dot={{ r: 4 }} />
-                    </LineChart>
-                  )}
-                  {chartType === 'bar' && (
-                    <BarChart data={learningStats[period]}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                      <XAxis dataKey="period" stroke="#fff" tickFormatter={formatXAxis} />
-                      <YAxis label={{ value: "Minutes", angle: -90, position: "insideLeft", fill: "#fff" }} stroke="#fff" />
-                      <Tooltip contentStyle={{ background: "#222", border: "none" }} labelStyle={{ color: "#fff" }} labelFormatter={formatXAxis} />
-                      <Legend />
-                      <Bar dataKey="average" name="Moyenne" fill="#8884d8" />
-                    </BarChart>
-                  )}
-                  {chartType === 'area' && (
-                    <AreaChart data={learningStats[period]}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                      <XAxis dataKey="period" stroke="#fff" tickFormatter={formatXAxis} />
-                      <YAxis label={{ value: "Minutes", angle: -90, position: "insideLeft", fill: "#fff" }} stroke="#fff" />
-                      <Tooltip contentStyle={{ background: "#222", border: "none" }} labelStyle={{ color: "#fff" }} labelFormatter={formatXAxis} />
-                      <Legend />
-                      <Area type="monotone" dataKey="average" name="Moyenne" stroke="#8884d8" fill="#8884d8" fillOpacity={0.3} />
-                    </AreaChart>
-                  )}
+                  {chartElement}
                 </ResponsiveContainer>
               )}
             </div>
