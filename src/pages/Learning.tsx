@@ -443,73 +443,73 @@ const Learning = () => {
             );
           }
           return (
-          <Card 
-            key={module._id} 
-            className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden"
-            onClick={() => handleModuleClick(module._id)}
-          >
+            <Card 
+              key={module._id} 
+              className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden"
+              onClick={() => handleModuleClick(module._id)}
+            >
               {module.thumbnail ? (
-              <div className="h-48 bg-cover bg-center relative overflow-hidden">
-                <img 
-                  src={module.thumbnail} 
-                  alt={module.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute top-4 right-4">
-                  <Badge className={getTypeColor(module.type)}>
-                    <div className="flex items-center space-x-1">
-                      {getModuleIcon(module.type)}
-                      <span className="capitalize">{module.type}</span>
+                <div className="h-48 bg-cover bg-center relative overflow-hidden">
+                  <img 
+                    src={module.thumbnail} 
+                    alt={module.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute top-4 right-4">
+                    <Badge className={getTypeColor(module.type)}>
+                      <div className="flex items-center space-x-1">
+                        {getModuleIcon(module.type)}
+                        <span className="capitalize">{module.type}</span>
+                      </div>
+                    </Badge>
+                  </div>
+                  <div className="absolute bottom-4 left-4 text-white">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="h-4 w-4" />
+                      <span className="text-sm">{module.duration}min</span>
                     </div>
-                  </Badge>
-                </div>
-                <div className="absolute bottom-4 left-4 text-white">
-                  <div className="flex items-center space-x-2">
-                    <Clock className="h-4 w-4" />
-                    <span className="text-sm">{module.duration}min</span>
                   </div>
                 </div>
-              </div>
               ) : (
                 <div className="h-48 w-full bg-gray-200 flex items-center justify-center text-gray-400 relative overflow-hidden">
                   <BookOpen className="h-12 w-12" />
                   <span className="absolute bottom-4 left-4 text-xs">No image</span>
                 </div>
-            )}
+              )}
 
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-3">
-                <Badge className={getDifficultyColor(module.difficulty)}>
-                  {module.difficulty}
-                </Badge>
-                <div className="flex items-center space-x-1 text-vibrant-orange">
-                  <Star className="h-4 w-4" />
-                  <span className="font-semibold">{module.points}</span>
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-3">
+                  <Badge className={getDifficultyColor(module.difficulty)}>
+                    {module.difficulty}
+                  </Badge>
+                  <div className="flex items-center space-x-1 text-vibrant-orange">
+                    <Star className="h-4 w-4" />
+                    <span className="font-semibold">{module.points}</span>
+                  </div>
                 </div>
-              </div>
 
-              <h3 className="text-lg font-semibold mb-2 group-hover:text-vibrant-blue transition-colors">
-                {module.title}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-                {module.description}
-              </p>
+                <h3 className="text-lg font-semibold mb-2 group-hover:text-vibrant-blue transition-colors">
+                  {module.title}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+                  {module.description}
+                </p>
 
-              <div className="space-y-3">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-500">Progression</span>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-500">Progression</span>
                     <span className="font-semibold">{getLiveOrSavedProgress(module._id)}%</span>
-                </div>
-                <ProgressBar 
+                  </div>
+                  <ProgressBar 
                     progress={getLiveOrSavedProgress(module._id)}
                     color={getVideoStatus(module._id) === 'completed' ? 'green' : 'blue'}
-                />
-              </div>
-              <div className="mt-4 flex justify-between items-center">
-                <Badge variant="outline" className="text-xs">
-                  {module.category}
-                </Badge>
+                  />
+                </div>
+                <div className="mt-4 flex justify-between items-center">
+                  <Badge variant="outline" className="text-xs">
+                    {module.category}
+                  </Badge>
                   {getVideoProgress(module._id) === 100 ? (
                     <Button
                       size="sm"
@@ -524,8 +524,8 @@ const Learning = () => {
                       Revoir
                     </Button>
                   ) : (
-                <Button 
-                  size="sm" 
+                    <Button
+                      size="sm"
                       className="bg-gradient-rainbow w-full hover:opacity-90"
                       onClick={async (e) => {
                         e.stopPropagation();
@@ -550,46 +550,46 @@ const Learning = () => {
                       }}
                     >
                       {getVideoProgress(module._id) > 0 ? 'Continuer' : 'Commencer'}
-                </Button>
+                    </Button>
                   )}
-              </div>
+                </div>
 
-              {module.type === 'video' && (
-                <div className="mt-4">
-                  {Array.isArray(videos) && videos.map(video => (
-                    <div key={video._id} className="mb-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-semibold">{video.title}</span>
-                        <span className="text-xs text-gray-500">{video.duration} min</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="flex-1"
-                          onClick={() => {/* Open video in modal or new page */}}
-                        >
-                          <Play className="h-4 w-4 mr-2" />
-                          {getVideoProgress(video._id) === 100 ? 'Revoir' : 'Regarder'}
-                        </Button>
-                        <div className="text-xs text-gray-500">
-                          Progress: {getVideoProgress(video._id)}%
-                          {getVideoProgress(video._id) === 100 ? (
-                            <span className="text-green-500 ml-2">✔ Terminé</span>
-                          ) : (
-                            <button 
-                              onClick={() => markVideoComplete(video._id)} 
-                              className="text-vibrant-blue ml-2"
-                            >
-                              Marquer comme terminé
-                            </button>
-                          )}
+                {module.type === 'video' && (
+                  <div className="mt-4">
+                    {Array.isArray(videos) && videos.map(video => (
+                      <div key={video._id} className="mb-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-semibold">{video.title}</span>
+                          <span className="text-xs text-gray-500">{video.duration} min</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={() => {/* Open video in modal or new page */}}
+                          >
+                            <Play className="h-4 w-4 mr-2" />
+                            {getVideoProgress(video._id) === 100 ? 'Revoir' : 'Regarder'}
+                          </Button>
+                          <div className="text-xs text-gray-500">
+                            Progress: {getVideoProgress(video._id)}%
+                            {getVideoProgress(video._id) === 100 ? (
+                              <span className="text-green-500 ml-2">✔ Terminé</span>
+                            ) : (
+                              <button 
+                                onClick={() => markVideoComplete(video._id)} 
+                                className="text-vibrant-blue ml-2"
+                              >
+                                Marquer comme terminé
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
 
                 {getVideoStatus(module._id) === 'completed' && (
                   <div className="flex flex-col gap-2 mt-2">
@@ -644,8 +644,8 @@ const Learning = () => {
                     )}
                   </div>
                 )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
           );
         })}
       </div>
